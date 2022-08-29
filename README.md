@@ -653,7 +653,7 @@ After reading the above, it is clear that while this is a very useful feature, a
 
 Please refer to [Starknet's documentation](https://starknet.io/docs/hello_starknet/l1l2.html) to see how it all works in more details.  
 
-### Lack of L1-address Sanity Checks on L2
+### Lack of Addresses Sanity Checks
 
 With the additional complexity of sending messages between L1 and L2 chains, there can be issues with data type mismatches for elements such as addresses if the L1 address is not properly validated on L2. L1 addresses have 160 bits which is less than the number of bits a single `felt` type can hold.
 
