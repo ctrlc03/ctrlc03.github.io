@@ -437,7 +437,7 @@ func raise_bid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
 
     assert enough_balance = 1
 
-    # Update user's locked balanced
+    # Update the user locked balanced
     let (new_balance, overflow) = uint256_add(locked_balance, amount)
     _lockedBalancesOf.write(account=caller, value=new_balance)
     assert overflow = 0
