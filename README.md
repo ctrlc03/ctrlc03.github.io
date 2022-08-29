@@ -16,7 +16,7 @@ While Cairo is still relatively new, it is progressing at a very quick pace and 
 
 For easy navigation here's a table of contents:
 
-* TOC 
+* TOC
 {:toc}
 
 ## Cairo and Security 
@@ -41,9 +41,7 @@ You would usually go and define a `Uint256` like this:
 `let five_uint256: Uint256 = Uint256(5, 0)`
 
 Going back to `felt`, the range can be described using this formula: 
-
-$$  -P/2 < x < P/2 $$
-
+$$-P/2 < x < P/2$$ 
 Where P is a very large prime number of `2^251 + 17 * 2^192 + 1` bits. Doing a deep dive into the math here is somewhat out of the scope of this document, so please refer to [Cairo's documentation](https://www.cairo-lang.org/docs/hello_cairo/intro.html#:~:text=The%20primitive%20type%20%2D%20field%20element%20(felt)&text=In%20the%20context%20of%20Cairo,number%20with%2076%20decimal%20digits).
 
 With Cairo, being constrained to a single data type, certain things like for instance dealing with strings, becomes difficult. Even though many developers have written awesome libraries which make everyone's life easier (a comprehensive list of third-party libraries can be found in [Cairo's Goldmine's repository](https://github.com/beautyisourbusiness/cairo-goldmine)) this can of course lead to buggy code and security risks. For instance we can deal with strings with [caistring](https://github.com/topology-gg/caistring), and perform complex math operations with libraries such as [cairo-math-64x61](https://github.com/influenceth/cairo-math-64x61).
@@ -437,7 +435,7 @@ func raise_bid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
 
     assert enough_balance = 1
 
-    # Update the user locked balanced
+    # Update user's locked balanced
     let (new_balance, overflow) = uint256_add(locked_balance, amount)
     _lockedBalancesOf.write(account=caller, value=new_balance)
     assert overflow = 0
@@ -941,7 +939,7 @@ The proposed solution is to name storage variables accordingly. For instance two
 
 And if you want to have a go at exploiting this vulnerability, here is the [winning](https://github.com/milancermak/cairo-underhanded) submission of the Cairo underhanded challenge. (Contest by [Nethermind](https://twitter.com/nethermindeth) and submission by [@milancermak](https://twitter.com/milancermak)).
 
-## Interacting with arbitrary tokens 
+## Interacting with Arbitrary Tokens 
 
 When interacting with arbitrary tokens, always make sure that transfers are validated with appropriate balance checks as these tokens might not implement the same logic on transfer.
 
@@ -1038,7 +1036,7 @@ Finally, we revert if the previous balance + the amount transferred is not equal
 
 A token doesn't have to be malicious for this to apply, we've seen in the past that certain tokens charge a fee on transfer (which might or might not go towards the liquidity pool, but that's another story), protocols should consider whether to allow these types of tokens to be used in their protocol. When in doubt, always implement the checks described above to be on the safe side. 
 
-## Missing zero address checks
+## Missing Zero Address Checks
 
 In StarkNet, you can send transactions without using a contract account. The syscall `get_caller_adress` will always return zero in that case. 
 
@@ -1052,7 +1050,7 @@ To mitigate this vector it is possible to use the `assert_not_zero` function fro
 >
 >Here on the OZ cairo contract [repo](https://github.com/OpenZeppelin/cairo-contracts/issues/148) there is a short discussion of the matter, related to an issue that was identified in their `ERC721` contract just before release of the first version of `cairo-contracts`.
 
-## Missing zero value checks
+## Missing Zero Value Checks
 
 Similar to the attack vector described above, it is important to check that non-address values are also not zero. While addresses are always of type `felt`, we will include `Uint256` values too. 
 
@@ -1277,7 +1275,7 @@ It will be interesting seeing what opportunities for DoS are encountered in Star
 
 To conclude (for now), we should consider that at this stage of StarkNet's life, transactions can be censored. As of the time of writing this first iteration of this post, the sequencer is centralized. Therefore, it might be possible that transactions are censored and this can cause huge damage. We have seen this described by ChainSecurity in their MakerDAO DAI bridge [report](https://chainsecurity.com/wp-content/uploads/2021/12/ChainSecurity_MakerDAO_StarkNet-DAI-Bridge_audit.pdf). Things will of course change as decentralized sequencers are introduced in StarkNet.
 
-## Not using static code analyzers 
+## Not using Static Code Analyzers 
 
 While static code analysis should not be considered as a replacement of a security audit, they can help find low-hanging fruits in your Cairo code (or any other code), so why not use them? 
 
@@ -1300,7 +1298,7 @@ Going back to answering the question of how to prepare for an audit, we recommen
 - [ ] Identify areas of concern which you believe that might have bugs (This gives the auditor a good starting point)
 - [ ] Gather documentation and updated deployment scripts to allow auditors to hit the ground running
 
-## Final Note 
+## Testing Tools 
 
 Which frameworks can you use to test Cairo contracts?
 
