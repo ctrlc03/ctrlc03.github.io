@@ -31,7 +31,7 @@ It should be noted that some of these scenarios below have a direct correlation 
 
 ## Cairo Basics 
 
-Cairo is built around a unique data type - the field element or `felt` (A`felt` is analogous to a unsigned integer). With this type, you can do pretty much anything you want in StarkNet. For instance, `Uint256` which Solidity devs love, are composed of:
+Cairo is built around a unique data type - the field element or `felt` (A`felt` is analogous to a integer). With this type, you can do pretty much anything you want in StarkNet. For instance, `Uint256` which Solidity devs love, are composed of:
 
 * `low` - 128 bits
 * `high` - 128 bits 
@@ -40,9 +40,15 @@ You would usually go and define a `Uint256` like this:
 
 `let five_uint256: Uint256 = Uint256(5, 0)`
 
-Going back to `felt`, the range can be described using this formula: 
+Going back to `felt`, the range can be described using this formula, if we consider the [signed range](https://www.cairo-lang.org/docs/hello_cairo/intro.html#the-primitive-type-field-element-felt):
+
 $$-P/2 < x < P/2$$ 
-Where P is a very large prime number of `2^251 + 17 * 2^192 + 1` bits. Doing a deep dive into the math here is somewhat out of the scope of this document, so please refer to [Cairo's documentation](https://www.cairo-lang.org/docs/hello_cairo/intro.html#:~:text=The%20primitive%20type%20%2D%20field%20element%20(felt)&text=In%20the%20context%20of%20Cairo,number%20with%2076%20decimal%20digits).
+
+Or the following, if we consider the [unsigned range](https://www.cairo-lang.org/docs/how_cairo_works/builtins.html#range-checks):
+
+$$ 0 <= x < P $$
+
+Where P is a very large prime number of `2^251 + 17 * 2^192 + 1` bits (note that the range check linked for the unsigned range will work on the field `[0, 2 ** 128)`). Doing a deep dive into the math here is somewhat out of the scope of this document, so please refer to [Cairo's documentation](https://www.cairo-lang.org/docs/hello_cairo/intro.html).
 
 With Cairo, being constrained to a single data type, certain things like for instance dealing with strings, becomes difficult. Even though many developers have written awesome libraries which make everyone's life easier (a comprehensive list of third-party libraries can be found in [Cairo's Goldmine's repository](https://github.com/beautyisourbusiness/cairo-goldmine)) this can of course lead to buggy code and security risks. For instance we can deal with strings with [caistring](https://github.com/topology-gg/caistring), and perform complex math operations with libraries such as [cairo-math-64x61](https://github.com/influenceth/cairo-math-64x61).
 
@@ -1318,40 +1324,39 @@ Well, luckily you have many options (all links are in the section below):
 
 Here are all of the links that have been used in this research (plus some extra), and that have been mentioned. Thanks to everyone for their great content, and for making StarkNet awesome. 
 
-* Cairo [whitepaper](https://eprint.iacr.org/2021/1063)
+* StarkWare - [Cairo whitepaper](https://eprint.iacr.org/2021/1063)
 * StarkWare - [StarkNet Docs](https://docs.starknet.io/)
 * StarkWare - [How Cairo Works](https://starknet.io/docs/how_cairo_works/index.html)
 * StarkWare - [Hello StarkNet](https://starknet.io/docs/hello_starknet/index.html)
 * OpenZeppelin - [Cairo contracts](https://github.com/OpenZeppelin/cairo-contracts)
-* MakerDAO StarkNet bridge audit by [ChainSecurity](https://chainsecurity.com/wp-content/uploads/2021/12/ChainSecurity_MakerDAO_StarkNet-DAI-Bridge_audit.pdf)
-* CairoPractice [Cairo conventions](https://mirror.xyz/0xa37228277Ed21843c5F61F4Ed2928Af5Df2A81C9/GJHHUYJDfN-0Ok8yO7jsjAJaxBefWGcyVhNwpE_IJJw)
-* CoinMonks -[Variable name clashing](https://medium.com/coinmonks/storage-variable-clashing-in-starknet-ce5f28e60886)
-* Ape Worx [StarkNet plugin](https://github.com/ApeWorX/ape-starknet)
-* OnlyDust [development guidelines](https://github.com/onlydustxyz/development-guidelines/blob/main/starknet/README.md)
-* Empiric Network [price feeds](https://empiric.network/)
-* Stork Oracle [price feeds](https://www.stork.network/)
-* StarkNet-py [repo](https://github.com/software-mansion/starknet.py)
-* OpenZeppelin [Nile](https://github.com/OpenZeppelin/nile)
-* Shard Labs [StarkNet Devnet](https://github.com/Shard-Labs/starknet-devnet)
-* StarkWare [Cairo standard library](https://github.com/starkware-libs/cairo-lang/tree/master/src/starkware)
-* InfluenceEth [Math64x61](https://github.com/influenceth/cairo-math-64x61/)
-* Beautyisourbusiness [Cairo Goldmine](https://github.com/beautyisourbusiness/cairo-goldmine)
-* HardHat StarkNet plugin [repo](https://github.com/Shard-Labs/starknet-hardhat-plugin)
-* OnlyDust [Starklings](https://github.com/onlydustxyz/starklings) (if you want to learn Cairo in a fun and interactive way)
-* 0xNonCents [VRF](https://twitter.com/0xNonCents/status/1555288515314946049)
-* Hackernoon [article](https://hackernoon.com/what-is-cairo-lang-10-best-resources-for-scaling-dapps-using-starks)
-* Empiric Network [writing upgradable contracts](https://medium.com/@EmpiricNetwork/starknet-guide-writing-upgradable-contracts-using-a-proxy-af3f107f238b)
-* OpenZeppelin [extensibility patter](https://docs.openzeppelin.com/contracts-cairo/0.3.1/extensibility)
+* ChainSecurity - [MakerDAO StarkNet bridge audit](https://chainsecurity.com/wp-content/uploads/2021/12/ChainSecurity_MakerDAO_StarkNet-DAI-Bridge_audit.pdf)
+* CairoPractice - [Cairo conventions](https://mirror.xyz/0xa37228277Ed21843c5F61F4Ed2928Af5Df2A81C9/GJHHUYJDfN-0Ok8yO7jsjAJaxBefWGcyVhNwpE_IJJw)
+* CoinMonks - [Variable name clashing](https://medium.com/coinmonks/storage-variable-clashing-in-starknet-ce5f28e60886)
+* Ape Worx - [StarkNet plugin](https://github.com/ApeWorX/ape-starknet)
+* OnlyDust - [development guidelines](https://github.com/onlydustxyz/development-guidelines/blob/main/starknet/README.md)
+* Empiric Network - [price feeds](https://empiric.network/)
+* Stork Oracle - [price feeds](https://www.stork.network/)
+* StarkNet-py - [repo](https://github.com/software-mansion/starknet.py)
+* OpenZeppelin - [Nile](https://github.com/OpenZeppelin/nile)
+* Shard Labs - [StarkNet Devnet](https://github.com/Shard-Labs/starknet-devnet)
+* StarkWare - [Cairo standard library](https://github.com/starkware-libs/cairo-lang/tree/master/src/starkware)
+* InfluenceEth - [Math64x61](https://github.com/influenceth/cairo-math-64x61/)
+* Beautyisourbusiness - [Cairo Goldmine](https://github.com/beautyisourbusiness/cairo-goldmine)
+* ShardLabs - HardHat StarkNet plugin [repo](https://github.com/Shard-Labs/starknet-hardhat-plugin)
+* OnlyDust - [Starklings](https://github.com/onlydustxyz/starklings) (if you want to learn Cairo in a fun and interactive way)
+* 0xNonCents - [VRF](https://twitter.com/0xNonCents/status/1555288515314946049)
+* Hackernoon - [article](https://hackernoon.com/what-is-cairo-lang-10-best-resources-for-scaling-dapps-using-starks)
+* Empiric Network - [writing upgradable contracts](https://medium.com/@EmpiricNetwork/starknet-guide-writing-upgradable-contracts-using-a-proxy-af3f107f238b)
+* OpenZeppelin - [extensibility patter](https://docs.openzeppelin.com/contracts-cairo/0.3.1/extensibility)
 * Amanusk Paradigm CTF [cairo solutions](https://github.com/amanusk/cairo-paradigm-ctf)
-* Crytic (ToB) [not so smart cairo contracts](https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/cairo)
-* Fravoll [Checks-effects-interaction pattern](https://fravoll.github.io/solidity-patterns/checks_effects_interactions.html)
-* CoinDesk [re-entrancy attacks](https://www.coindesk.com/tech/2022/03/31/ola-finance-exploited-for-36m-in-re-entrancy-attack/)
-* CoinMarketCap [DAO hack](https://coinmarketcap.com/alexandria/article/a-history-of-the-dao-hack)
+* Crytic (ToB) - [not so smart cairo contracts](https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/cairo)
+* Fravoll - [Checks-effects-interaction pattern](https://fravoll.github.io/solidity-patterns/checks_effects_interactions.html)
+* CoinDesk - [re-entrancy attacks](https://www.coindesk.com/tech/2022/03/31/ola-finance-exploited-for-36m-in-re-entrancy-attack/)
+* CoinMarketCap - [DAO hack](https://coinmarketcap.com/alexandria/article/a-history-of-the-dao-hack)
+* Jordan McKinney - [the Felt integer type explained](https://www.youtube.com/watch?v=jcrAq71WwSM)
 
 ## P.S. 
 
 > This guide will be maintained and examples and new sections added as more research is conducted. We also encourage other devs and auditors to contribute to it and give feedback. 
 
-## Repo 
-
-https://github.com/ctrlc03/ctrlc03.github.io
+[Repository link](https://github.com/ctrlc03/ctrlc03.github.io)
