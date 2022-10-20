@@ -5,10 +5,10 @@
 
 # Cairo and StarkNet Security
 
-## Introduction 
+## Introduction
 
-[StarkNet](https://starkware.co/starknet/) is a decentralized ZK rollup which operates as a Layer 2 (L2) for Ethereum. 
-Smart contracts are developed using the Cairo programming language, a general purpose Turing-complete language. 
+[StarkNet](https://starkware.co/starknet/) is a decentralized ZK rollup which operates as a Layer 2 (L2) for Ethereum.
+Smart contracts are developed using the Cairo programming language, a general purpose Turing-complete language.
 
 While Cairo is still relatively new, it is progressing at a very quick pace and being widely adopted by many developers. With it being this new, security is still a big variable, and research on this field is still in its infancy. Therefore, this "guide" aims to provide some points to consider when writing smart contracts with Cairo.
 
@@ -19,22 +19,22 @@ For easy navigation here's a table of contents:
 * TOC
 {:toc}
 
-## Cairo and Security 
+## Cairo and Security
 
 Although it can be argued that smart contracts are vulnerable to a common set of attack vectors, the idiosyncrasies of a given language can lead to unique edge cases. Furthermore, there are risks which arise from the use of a less "battle-tested" programming language such as Cairo, where the fast paced nature of the project can lead to libraries and standards being constantly updated.
 
-While these standards are constantly updated and new libraries are introduced pretty much every day, it is still recommended to use popular libraries such as OpenZeppelin's (OZ) Cairo contracts ([available here](https://github.com/OpenZeppelin/cairo-contracts "openzeppelin github")), as re-inventing the wheel is inefficient and can result in the addition of obscure bugs within the code. Having said this, please apply caution when integrating any library in your code, and always make sure that you fully understand how they work. 
+While these standards are constantly updated and new libraries are introduced pretty much every day, it is still recommended to use popular libraries such as OpenZeppelin's (OZ) Cairo contracts ([available here](https://github.com/OpenZeppelin/cairo-contracts "openzeppelin github")), as re-inventing the wheel is inefficient and can result in the addition of obscure bugs within the code. Having said this, please apply caution when integrating any library in your code, and always make sure that you fully understand how they work.
 
-Below are presented different topics and guidelines designed to assist with development of secure Cairo code, intended to be used by both developers and auditors performing smart contract audits. Please note that this document will remain in active development and will change as features are added/removed and new attack vectors are identified. Furthermore, there are still certain areas where more research is needed. 
+Below are presented different topics and guidelines designed to assist with development of secure Cairo code, intended to be used by both developers and auditors performing smart contract audits. Please note that this document will remain in active development and will change as features are added/removed and new attack vectors are identified. Furthermore, there are still certain areas where more research is needed.
 
 It should be noted that some of these scenarios below have a direct correlation to bugs that the writers observed in Solidity smart contracts and may be somewhat opinionated. Also, they are presented in no specific order.
 
-## Cairo Basics 
+## Cairo Basics
 
 Cairo is built around a unique data type - the field element or `felt` (A`felt` is analogous to a integer). With this type, you can do pretty much anything you want in StarkNet. For instance, `Uint256` which Solidity devs love, are composed of:
 
 * `low` - 128 bits
-* `high` - 128 bits 
+* `high` - 128 bits
 
 You would usually go and define a `Uint256` like this:
 
@@ -42,7 +42,7 @@ You would usually go and define a `Uint256` like this:
 
 Going back to `felt`, the range can be described using this formula, if we consider the [signed range](https://www.cairo-lang.org/docs/hello_cairo/intro.html#the-primitive-type-field-element-felt):
 
-$$-P/2 < x < P/2$$ 
+$$-P/2 < x < P/2$$
 
 Or the following, if we consider the [unsigned range](https://www.cairo-lang.org/docs/how_cairo_works/builtins.html#range-checks):
 
@@ -64,11 +64,11 @@ Well, the Cairo VM has three registers:
 
 To better understand how Cairo works and how to write StarkNet smart contracts, please refer to the official documentation and [tutorials](https://www.cairo-lang.org/docs/index.html).
 
-Having said all of the above, let's jump into the security considerations that you all came here for, we have broken these down into key bug classes and design concepts below. 
+Having said all of the above, let's jump into the security considerations that you all came here for, we have broken these down into key bug classes and design concepts below.
 
 ## Access Control
 
-With every system, access control can be problematic if not implemented correctly. Always remember to  comply with the principle of least privilege, avoiding over assigning permissions to any account as this could be very dangerous. If one account is compromised, the whole smart contract could be taken over as well as the funds stored within. 
+With every system, access control can be problematic if not implemented correctly. Always remember to  comply with the principle of least privilege, avoiding over assigning permissions to any account as this could be very dangerous. If one account is compromised, the whole smart contract could be taken over as well as the funds stored within.
 
 ### Role-based Access Control (RBAC)
 
@@ -92,7 +92,7 @@ Let's have a look on how you can prevent a non-owner user from calling a functio
 
 In our code within the constructor we will pass as argument an address, which we want to set as admin:
 
-```javascript 
+```javascript
 @constructor
 func constructor{
         syscall_ptr : felt*,
@@ -106,7 +106,7 @@ end
 
 This code above will call the `initializer` function of the `Ownable` library:
 
-```javascript 
+```javascript
 func initializer{
         syscall_ptr : felt*,
         pedersen_ptr : HashBuiltin*,
@@ -130,7 +130,7 @@ end
 
 We can see that `initializer` takes an `owner` argument and sets it as the owner of the contract by overwriting the `Ownable_owner` storage variable. From now on, we can protect our admin functions using `Ownable.assert_only_owner` which looks like the following:
 
-```javascript 
+```javascript
 func assert_only_owner{
         syscall_ptr : felt*,
         pedersen_ptr : HashBuiltin*,
@@ -150,10 +150,10 @@ end
 
 What it does is:
 
-1. get the current owner 
-2. get the caller address 
-3. checks that the caller is not the address zero 
-4. checks that the owner is equal to the caller 
+1. get the current owner
+2. get the caller address
+3. checks that the caller is not the address zero
+4. checks that the owner is equal to the caller
 
 This continues or reverts based on the result of point 3 and 4.
 
@@ -161,7 +161,7 @@ Furthermore, should we wish to implement more granular access control than just 
 
 With `AccessControl`, we can set arbitrary roles, and have them verified in a similar fashion. In this case, we will set the admin role in the constructor of our contract, just after initializing the library. Now that we have an admin role, we can use it to set all other roles. Let's try and implement a minter role:
 
-```javascript 
+```javascript
 @external
 func grantRole{
         syscall_ptr : felt*,
@@ -175,7 +175,7 @@ end
 
 And then protect our `mint` function to only allow the `minter` to call it, using a modifier which looks like the one below:
 
-```javascript 
+```javascript
 func assert_only_role{
         syscall_ptr : felt*,
         pedersen_ptr : HashBuiltin*,
@@ -193,7 +193,7 @@ end
 
 And this is our code with the new added check:
 
-```javascript 
+```javascript
 @external
 func mint{
         syscall_ptr: felt*,
@@ -213,21 +213,21 @@ And this should fail if the caller does not have the minter role. OpenZeppelin d
 #### Transfer of Ownership Patterns
 
 For contracts managing user funds, it’s important that every situation is handled correctly. Something we've seen in abundance over many technologies are mistakes when transfering the ownership of contracts.
-We have seen a number of different patterns being recommended to different clients in the past (especially contracts which hold large amount of user funds in escrow). 
+We have seen a number of different patterns being recommended to different clients in the past (especially contracts which hold large amount of user funds in escrow).
 
-The best approach in our opinion is to propose a new owner and with a separate call that requires them to accept ownership before it is transferred. This way, typos in the initial call will not cause financial damage, unless of course ownership is transferred to some random account which somehow notices that and accepts it. 
+The best approach in our opinion is to propose a new owner and with a separate call that requires them to accept ownership before it is transferred. This way, typos in the initial call will not cause financial damage, unless of course ownership is transferred to some random account which somehow notices that and accepts it.
 
 The logic would look something like this:
 
-1. The owner proposes a new owner 
-2. The proposed owner is saved in the `proposed_owner` storage variable 
+1. The owner proposes a new owner
+2. The proposed owner is saved in the `proposed_owner` storage variable
 3. The proposed owner calls `accept_ownership`, where the contract checks that the caller address equals to the value stored in the `proposed_owner` storage variable, and finally transfers ownership and resets the `proposed_owner`
 
 In between point two and three, the original (and current) owner can call `cancel_request` to cancel the ownership proposal request.  
 
 Additionally, it might be wise to keep an account owned by the contract manager as a proposed owner - so that in case we lose access to the first account, we can accept ownership with the proposed one (every little helps).
 
-> A member of the Spectra team submitted a [PR](https://github.com/OpenZeppelin/cairo-contracts/pull/275) to the `cairo-contracts` libraries some time back. the code works and is tested, however it will not be accepted until the Solidity version is standardized and pushed on the Solidity contracts repository. 
+> A member of the Spectra team submitted a [PR](https://github.com/OpenZeppelin/cairo-contracts/pull/275) to the `cairo-contracts` libraries some time back. the code works and is tested, however it will not be accepted until the Solidity version is standardized and pushed on the Solidity contracts repository.
 This was ported from an audited Solidity version. If you do use it, it might require some changes due to OpenZeppelin having updated their contracts different times since the PR.  
 
 ## Storage Variables Visibility
@@ -277,30 +277,30 @@ starknet get_storage_at \
 
 For many use cases this is perfectly fine, but what if you wanted to store sensitive data within the contract? For example, say you were developing a battleship style game and wanted to be fully on-chain, it would be best if your opponent couldn't see where you had deployed your ships with a simple query.
 
-A possible solution? Hashing! (but actually we will see later that this might not even work). 
+A possible solution? Hashing! (but actually we will see later that this might not even work).
 
 Let's take as an example this piece of code below, which allows the caller to store a variable to storage, let's assume this is some sort of a game where people record their moves on chain.
 
 
 ```javascript
-@external 
+@external
 func register_move_unsafe{
         syscall_ptr: felt*,
         pedersen_ptr: HashBuiltin*,
         range_check_ptr,
         ecdsa_ptr : SignatureBuiltin*
     } (
-        move: felt 
+        move: felt
     ):
     let (caller) = get_caller_address()
     positions.write(caller, value=move)
     return ()
-end 
+end
 ```
 
 The keen eyed will notice that we are not doing any validation as to if the move is valid, but that is beside the point of this example (btw good catch, that would have been a bug for your audit report).
 
-Now let's retrieve this value from storage using the StarkNet cli. 
+Now let's retrieve this value from storage using the StarkNet cli.
 
 ```bash
 nile send PK1 storage_example register_move_unsafe 10
@@ -316,7 +316,7 @@ starknet get_storage_at --contract_address 0x0595464445794021a5ccc8d5d81e43bdb51
 0xa -> 10
 ```
 
-Let's try with the function that hashes the parameters. 
+Let's try with the function that hashes the parameters.
 
 ```javascript
 @external
@@ -342,10 +342,10 @@ func register_move{
             tempvar pedersen_ptr = pedersen_ptr
         else:
             tempvar pedersen_ptr = pedersen_ptr
-        end 
+        end
     else:
         tempvar pedersen_ptr=pedersen_ptr
-    end 
+    end
     let (hashed_move) = hash2{hash_ptr=pedersen_ptr}(new_position, 0)
     positions.write(caller_address, value=hashed_move)
     return ()
@@ -353,7 +353,7 @@ end
 ```
 
 ```bash
-nile send PK1 storage_example register_move 0 10 
+nile send PK1 storage_example register_move 0 10
 Calling register_move on storage_example with params: ['0', '10']
 Invoke transaction was sent.
 Contract address: 0x01be5e81e5cf897169c2bddcd4e44ae679f6110752fa305ac6066ac4f502d653
@@ -366,7 +366,7 @@ starknet get_storage_at --contract_address 0x047122f5407b9e9a9c337efc43dfee5b34b
 And here, we show that the code works as expected (first time it succeeds as we pass 10, then replaying the same transaction fails):
 
 ```bash
-nile send PK1 storage_example register_move 10 15 
+nile send PK1 storage_example register_move 10 15
 
 Calling register_move on storage_example with params: ['10', '15']
 Invoke transaction was sent.
@@ -377,7 +377,7 @@ ctrlc3@ubuntu:~/Desktop/cairo-security/contracts$ nile debug 0x67942e3ed39825c67
 ⏳ Querying the network to check transaction status and identify contracts...
 ✅ Transaction status: ACCEPTED_ON_L2. No error in transaction.
 
-ctrlc3@ubuntu:~/Desktop/cairo-security/contracts$ nile send PK1 storage_example register_move 10 15 
+ctrlc3@ubuntu:~/Desktop/cairo-security/contracts$ nile send PK1 storage_example register_move 10 15
 Calling register_move on storage_example with params: ['10', '15']
 Invoke transaction was sent.
 Contract address: 0x01be5e81e5cf897169c2bddcd4e44ae679f6110752fa305ac6066ac4f502d653
@@ -402,23 +402,23 @@ storage_example.cairo:31:6: (pc=0:226)
 
 But, wait a second.. If you pass the plain text parameter in the function call, people can still see it.
 
-Given a tx hash, people can see the parameters passed using this [endpoint](https://alpha4.starknet.io/feeder_gateway/get_transaction?transactionHash=) + the transaction hash they want information for, so all of this would not work. So for now, do not store anything sensitive on StarkNet, and if for some reason you have to, make sure you encrypt it first. 
+Given a tx hash, people can see the parameters passed using this [endpoint](https://alpha4.starknet.io/feeder_gateway/get_transaction?transactionHash=) + the transaction hash they want information for, so all of this would not work. So for now, do not store anything sensitive on StarkNet, and if for some reason you have to, make sure you encrypt it first.
 
 > It would be nice to hear from game-devs how they are doing things here?
 
 ## Type Safety
 
-### Uint256 checks 
+### Uint256 checks
 
-As mentioned previously, `Uint256` are actually made up of two `felt` which can (well, should) contain up to 128 bits each. This means that an attacker has control of both the upper and lower portions of the `Uint256`. 
+As mentioned previously, `Uint256` are actually made up of two `felt` which can (well, should) contain up to 128 bits each. This means that an attacker has control of both the upper and lower portions of the `Uint256`.
 
 When performing validation of the contents, in say a balance update, it would be natural and efficient to only validate the relevant split of the integer. However, this opens a vector for attackers to manipulate contract logic for their own gain.
 
-A couple of examples of these vectors in the wild are shown in this [report](https://chainsecurity.com/wp-content/uploads/2021/12/ChainSecurity_MakerDAO_StarkNet-DAI-Bridge_audit.pdf) by ChainSecurity, for the `Unlimited Approvals and the Range of Uint256` and `L2 DAI Allows Stealing` findings. 
+A couple of examples of these vectors in the wild are shown in this [report](https://chainsecurity.com/wp-content/uploads/2021/12/ChainSecurity_MakerDAO_StarkNet-DAI-Bridge_audit.pdf) by ChainSecurity, for the `Unlimited Approvals and the Range of Uint256` and `L2 DAI Allows Stealing` findings.
 
 In your code, you should verify that `Uint256` arguments are actually valid `Uint256`. For this, you can use `uint256_check` from [Cairo standard library](https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/uint256.cairo).
 
-Moving to a practical example, we are borrowing the `Auction` challenge from 2022's Paradigm CTF. The goal of the challenge is to outbid the highest bid, which would require the user's account to bid all of his token balance times 2 + 1. Given that the ERC20 contract has not been modified, this would would either require to find a zero-day in the ERC20 contract or exploit a vulnerability in the auction contract.
+Moving to a practical example, we are borrowing the `Auction` challenge from 2022's Paradigm CTF. The goal of the challenge is to outbid the highest bid, which would require the user's account to bid all of his token balance times 2 + 1. Given that the ERC20 contract has not been modified, this would either require us to find a zero-day in the ERC20 contract or exploit a vulnerability in the auction contract.
 
 Let's take a look at the `raise_bid` function below:
 
@@ -430,7 +430,7 @@ func raise_bid{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
     alloc_locals
 
     only_open_auction(auction_id)
-    
+
     let (caller) = get_caller_address()
 
     # Check if user has enough credit
@@ -473,11 +473,11 @@ end
 
 We can see that the function accepts an `auction_id` and an `amount` parameters. The `auction_id` is verified to be of a running auction, and will revert if not. The function that deals with validating the auction is safe, so we are going to be focusing on the only other parameter we can play with, the `amount`.
 
-After verifying that we are trying to interact with an open auction, the contract will then pull the stored balance of the user (which can be increased by depositing tokens via the `increase_credit` function) as well as the locked balance (locked being the balance that one user added as bid). It will then calculate the unlocked balance which is equal to the `balance - locked balance`. In this case, it will be zero as we have not deposited any tokens in the contract. After, it will compare the passed `amount` value with the unlocked balance using `uint256_le`. 
+After verifying that we are trying to interact with an open auction, the contract will then pull the stored balance of the user (which can be increased by depositing tokens via the `increase_credit` function) as well as the locked balance (locked being the balance that one user added as bid). It will then calculate the unlocked balance which is equal to the `balance - locked balance`. In this case, it will be zero as we have not deposited any tokens in the contract. After, it will compare the passed `amount` value with the unlocked balance using `uint256_le`.
 
-If we pass a "malformed" `Uint256` to the contract, this check will pass and will let us become the highest bidder without having to deposit any tokens. 
+If we pass a "malformed" `Uint256` to the contract, this check will pass and will let us become the highest bidder without having to deposit any tokens.
 
-The `Uint256` which can be passed to the contract is the following: 
+The `Uint256` which can be passed to the contract is the following:
 
 ```json
 {"high": 0, "low":2 ** 128 + 1}
@@ -488,21 +488,21 @@ If you remember from the first sections, a `Uint256` is made of two felt of up t
 * `low`
 * `high`
 
-However, a `felt` can contain more than 128 bits, therefore we can use this to bypass the check, more specifically because there are no checks in place to prevent us from passing a non valid `Uint256` value. 
+However, a `felt` can contain more than 128 bits, therefore we can use this to bypass the check, more specifically because there are no checks in place to prevent us from passing a non valid `Uint256` value.
 
 Let's have a look at a more simple example where we can actually see what's going on:
 
-```javascript 
-@view 
+```javascript
+@view
 func uint256_test{
-    syscall_ptr : felt*, 
-    pedersen_ptr : HashBuiltin*, 
+    syscall_ptr : felt*,
+    pedersen_ptr : HashBuiltin*,
     range_check_ptr
     } (num: Uint256) -> (res: felt):
     let zero: Uint256 = Uint256(0, 0)
     let (check) = uint256_le(num, zero)
-    return (check) 
-end 
+    return (check)
+end
 ```
 
 This function simply accepts one `Uint256` value and compares it with zero to check if it's less or equal. Now, we pass the `Uint256` representation of one (`1 0`):
@@ -512,11 +512,11 @@ starknet call --address 0x018bbff3ce2473f7e779fbc2442cc5f0a5617789250862cba0512e
 0
 ```
 
-`uint256_is_le` returns zero which means that 1 is not less or equal to 0 (sanity check here). 
+`uint256_is_le` returns zero which means that 1 is not less or equal to 0 (sanity check here).
 
-No we try with a "malformed" `Uint256` which is the next digit up of what an `Uint256` low or high should contain:
+Now, we try with a "malformed" `Uint256` which is the next digit up of what an `Uint256` low or high should contain:
 
-```bash 
+```bash
 starknet call --address 0x018bbff3ce2473f7e779fbc2442cc5f0a5617789250862cba0512e2df304f70b --abi artifacts/abis/contract.json --function uint256_test --inputs 0 340282366920938463463374607431768211457 --no_wallet --feeder_gateway=http://127.0.0.1:5050
 1
 ```
@@ -525,7 +525,7 @@ And here we get 1, which means that `(0, 340282366920938463463374607431768211457
 
 *uint256_le*
 
-```javascript 
+```javascript
 # Returns 1 if the first unsigned integer is less than or equal to the second unsigned integer.
 func uint256_le{range_check_ptr}(a : Uint256, b : Uint256) -> (res : felt):
     let (not_le) = uint256_lt(a=b, b=a)
@@ -535,7 +535,7 @@ end
 
 *uint256_lt*
 
-```javascript 
+```javascript
 # Returns 1 if the first unsigned integer is less than the second unsigned integer.
 func uint256_lt{range_check_ptr}(a : Uint256, b : Uint256) -> (res : felt):
     if a.high == b.high:
@@ -547,7 +547,7 @@ end
 
 *is_le*
 
-```javascript 
+```javascript
 # Returns 1 if a <= b (or more precisely 0 <= b - a < RANGE_CHECK_BOUND).
 # Returns 0 otherwise.
 func is_le{range_check_ptr}(a, b) -> (res : felt):
@@ -572,37 +572,37 @@ If we did the same with a number smaller by just `1`, we would have the followin
 2. `uint256_lt(Uint256(0, 0), Uint256(0, 2 ** 128))`
 3. `is_le(0 + 1, 2 ** 128)`
 4. `is_nn((2 ** 128) - 1)`
-5. Now `2 ** 128 - 1` is just below the `RANGE_CHECK_BOUND` thus `is_nn` would return 1 
+5. Now `2 ** 128 - 1` is just below the `RANGE_CHECK_BOUND` thus `is_nn` would return 1
 6. Having returned `1`, we go back to `uint256_le`
 7. `return (1 - 1)`
 8. We have `0` thus the comparison holds false
 
-Both in the CTF, and in the example above, adding a `uint256_check` at the beginning of the function, would solve this issue and given the above `Uint256`, the call would revert. 
+Both in the CTF, and in the example above, adding a `uint256_check` at the beginning of the function, would solve this issue and given the above `Uint256`, the call would revert.
 
-```javascript 
-@view 
+```javascript
+@view
 func uint256_test_check{
-    syscall_ptr : felt*, 
-    pedersen_ptr : HashBuiltin*, 
+    syscall_ptr : felt*,
+    pedersen_ptr : HashBuiltin*,
     range_check_ptr
     } (num: Uint256) -> (res: felt):
     with_attr error_message("invalid uint256"):
         uint256_check(num)
-    end 
+    end
     let zero: Uint256 = Uint256(0, 0)
     let (check) = uint256_le(num, zero)
-    return (check) 
-end 
+    return (check)
+end
 ```
 
 Trying to call the function above with the same value as before would result in an assertion being thrown:
 
-```bash 
+```bash
 tarknet call --address 0x018bbff3ce2473f7e779fbc2442cc5f0a5617789250862cba0512e2df304f70b --abi artifacts/abis/contract.json --function uint256_test_check --inputs 0 340282366920938463463374607431768211457 --no_wallet --feeder_gateway=http://127.0.0.1:5050
 Got BadRequest while trying to access http://127.0.0.1:5050/feeder_gateway/call_contract?blockNumber=pending. Status code: 500; text: {"message":"/home/ctrlc3/.local/lib/python3.8/site-packages/starkware/cairo/common/uint256.cairo:23:5: Error at pc=0:193:\nValue 340282366920938463463374607431768211457, in range check builtin 1, is out of range [0, 340282366920938463463374607431768211456).\n    [range_check_ptr + 1] = a.high\n    ^****************************^\nCairo traceback (most recent call last):\ncontracts/contract.cairo:67:6: (pc=0:505)\nfunc uint256_test_check{\n     ^****************^\nError message: invalid uint256\ncontracts/contract.cairo:73:9: (pc=0:473)\n        uint256_check(num)\n        ^****************^","status_code":500}
 ```
 
-If you want to play with this CTF's Cairo challenges, `amanusk` was kind enough to push their [solutions](https://github.com/amanusk/cairo-paradigm-ctf) as well as some instructions on how to run the challenges locally. In total there are three Cairo challenges. 
+If you want to play with this CTF's Cairo challenges, `amanusk` was kind enough to push their [solutions](https://github.com/amanusk/cairo-paradigm-ctf) as well as some instructions on how to run the challenges locally. In total there are three Cairo challenges.
 
 
 ### Integer Overflow/Underflow
@@ -615,25 +615,25 @@ Aside casting between data types, Cairo does not automatically throw a revert if
 
 Let's have a look at a very simple example where we are going to overflow a `felt`:
 
-```javascript 
-@view 
+```javascript
+@view
 func overflow{
-    syscall_ptr : felt*, 
-    pedersen_ptr : HashBuiltin*, 
+    syscall_ptr : felt*,
+    pedersen_ptr : HashBuiltin*,
     range_check_ptr
     } (num1: felt, num2: felt) -> (res: felt):
-    return (num1 + num2) 
-end 
+    return (num1 + num2)
+end
 ```
 
 Here we are accepting two numbers and adding them up. If we pass the max value that a felt can hold, and the number 10, the contract will return the number 9 to us, as shown below.
 
-```bash 
+```bash
 starknet call --address 0x018bbff3ce2473f7e779fbc2442cc5f0a5617789250862cba0512e2df304f70b --abi artifacts/abis/contract.json --function overflow  --inputs 10 3618502788666131213697322783095070105623107215331596699973092056135872020480  --no_wallet --feeder_gateway=http://127.0.0.1:5050
 9
 ```
-Note that the above will hold true for all other operations, subtraction, multiplication etc, so please  always exercise caution. 
-On top of that, should you need to implement custom types, such as `uint64` or `uint128`, make sure than when casting between types you implement safety checks such as the ones implemented by `uint256_check`, which makes sure that a `Uint256` is composed of two values at most of 128 bits each (of course adapting this to your specific type). 
+Note that the above will hold true for all other operations, subtraction, multiplication etc, so please  always exercise caution.
+On top of that, should you need to implement custom types, such as `uint64` or `uint128`, make sure than when casting between types you implement safety checks such as the ones implemented by `uint256_check`, which makes sure that a `Uint256` is composed of two values at most of 128 bits each (of course adapting this to your specific type).
 
 So how do you prevent overflows? There are a number of secure libraries for math operations that should be used when writing Cairo contracts:
 
@@ -643,11 +643,11 @@ So how do you prevent overflows? There are a number of secure libraries for math
 
 ## L1<>L2 Operations
 
-> More details on this section will be added as more interoperable protocols are built and audited. 
+> More details on this section will be added as more interoperable protocols are built and audited.
 
 StarkNet is designed to allow communication with L1 contracts using `L1<>L2` messages. This extends the trust boundry of the smart contracts to send data between the two chains, potentially leading to complex cross chain attacks.
 
-In a nutshell, contracts on both Ethereum Mainnet/Testnet and StarkNet can send messages between each other. The messages from L2 are bundled automatically with the contract address sending it, and are posted on L1 to be stored on the L1 StarkNet core contract. The receiver L1 contract can then consume the message by calling the StarkNet core contract. 
+In a nutshell, contracts on both Ethereum Mainnet/Testnet and StarkNet can send messages between each other. The messages from L2 are bundled automatically with the contract address sending it, and are posted on L1 to be stored on the L1 StarkNet core contract. The receiver L1 contract can then consume the message by calling the StarkNet core contract.
 
 It is highly recommended that arbitrary messages are not accepted and that a check on L1 is added to ensure that a message is coming from the expected origin.
 
@@ -655,7 +655,7 @@ On the other hand, when sending messages from L1 to StarkNet, the message needs 
 
 > Note that while honest Sequencers automatically consume L1 -> L2 messages, it is not enforced by the protocol (so a Sequencer may choose to skip a message). This should be taken into account when designing the message protocol between the two contracts.
 
-After reading the above, it is clear that while this is a very useful feature, an appropriate plan should be created before incorporating it into your protocol. 
+After reading the above, it is clear that while this is a very useful feature, an appropriate plan should be created before incorporating it into your protocol.
 
 Please refer to [Starknet's documentation](https://starknet.io/docs/hello_starknet/l1l2.html) to see how it all works in more details.  
 
@@ -673,13 +673,13 @@ Here is an extract of one of their findings:
 
 We can see here that because of the lack of validation on L1, user funds could have been stuck in the escrow contract.
 
-Another example is given by Crytic (ToB) on their [not-so-smart-contracts repo](https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/cairo/L1_to_L2_address_conversion). 
+Another example is given by Crytic (ToB) on their [not-so-smart-contracts repo](https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/cairo/L1_to_L2_address_conversion).
 
 ## Re-Entrancy
 
 Re-entrancy attacks have a sordid history on L1 chains such as Ethereum for the potential to cause catastrophic financial damage to contracts that do not implement strong re-entrancy guards. The most impactful of these resulting in the [forking of Ethereum](https://coinmarketcap.com/alexandria/article/a-history-of-the-dao-hack) back in 2016, re-entrancy attacks are still actively [exploited in the wild](https://www.coindesk.com/tech/2022/03/31/ola-finance-exploited-for-36m-in-re-entrancy-attack/) in 2022.
 
-Re-entrancy is possible within StarkNet too, so make sure to use re-entrancy guards. As mentioned this issue is still actively exploited in many smart contracts languages, and while devs are more frequently using the appropriate libraries where needed, guards should be used in all StarkNet contracts as well (where appropriate of course). 
+Re-entrancy is possible within StarkNet too, so make sure to use re-entrancy guards. As mentioned this issue is still actively exploited in many smart contracts languages, and while devs are more frequently using the appropriate libraries where needed, guards should be used in all StarkNet contracts as well (where appropriate of course).
 
 On top of that, and probably even more importantly, devs should always remember to follow the [check-effect-interaction](https://fravoll.github.io/solidity-patterns/checks_effects_interactions.html) pattern which states:
 
@@ -699,7 +699,7 @@ ReentrancyGuard._end()
 
 The code is very simple but effective:
 
-```javascript 
+```javascript
 func _start{
         syscall_ptr: felt*,
         pedersen_ptr: HashBuiltin*,
@@ -732,15 +732,15 @@ The above was taken from OZ's repo, where there are some mock contracts which sh
 
 To sum up, always follow the checks-effects-interaction pattern where possible, and when interacting with external contracts, make sure that appropriate safeguards are in place such as the aforementioned reentrancy guard.
 
-## Exposing unwanted external functions 
+## Exposing unwanted external functions
 
-Due to how StarkNet smart contracts work, if you import a module with external functions in your contract, they will be automatically exposed. Most often than not, this is something that you might want, but it is important to make sure that sensitive functions are not exposed. Imagine you missed access control there, and an attacker could steal funds. 
+Due to how StarkNet smart contracts work, if you import a module with external functions in your contract, they will be automatically exposed. Most often than not, this is something that you might want, but it is important to make sure that sensitive functions are not exposed. Imagine you missed access control there, and an attacker could steal funds.
 
-In order to counter this, developers should follow the ***Extensibility*** [pattern](https://docs.openzeppelin.com/contracts-cairo/0.3.1/extensibility). The linked version is the most up-to-date one released by OpenZeppelin. 
+In order to counter this, developers should follow the ***Extensibility*** [pattern](https://docs.openzeppelin.com/contracts-cairo/0.3.1/extensibility). The linked version is the most up-to-date one released by OpenZeppelin.
 
-In short, code should be divided in libraries and contracts. Reusable logic and storage variables should go into a library, which are not to be deployed. These should be then imported as appropriate in the smart contract inside external or internal functions as deemed necessary by the developers. For more details, please read OZ's post. 
+In short, code should be divided in libraries and contracts. Reusable logic and storage variables should go into a library, which are not to be deployed. These should be then imported as appropriate in the smart contract inside external or internal functions as deemed necessary by the developers. For more details, please read OZ's post.
 
-One cool example was proposed in 2022's Paradigm CTF. The `cairo-proxy` [challenge](https://ctf.paradigm.xyz/challenges/cairo-proxy), exposed an external function which allowed anyone to change the storage of a contract (there was another mistake here related to the Proxy pattern but that's for another section). From this point, one could be solving the challenge in different ways, for instance by changing the initialized state of the contract and re-initializing it to be the `owner`, or directly change the owner and mint new tokens, or amending its balance. 
+One cool example was proposed in 2022's Paradigm CTF. The `cairo-proxy` [challenge](https://ctf.paradigm.xyz/challenges/cairo-proxy), exposed an external function which allowed anyone to change the storage of a contract (there was another mistake here related to the Proxy pattern but that's for another section). From this point, one could be solving the challenge in different ways, for instance by changing the initialized state of the contract and re-initializing it to be the `owner`, or directly change the owner and mint new tokens, or amending its balance.
 
 An example of the `Utils.cairo` code with a dangerously exposed `external` function has been included below:
 
@@ -764,19 +764,19 @@ func auth_write_storage{
 end
 ```
 
-Given a `storage_var` key and a value, an user could overwrite the storage of the `almost_erc20` contract. 
+Given a `storage_var` key and a value, an user could overwrite the storage of the `almost_erc20` contract.
 
 We can see another example on `Crytic`'s [repo](https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/cairo/dangerous_public_imports_in_libraries).
 
-## View Functions that modify the state 
+## View Functions that modify the state
 
-While Solidity developers might be used to the pattern that `view` functions do not modify state, this is not enforced in StarkNet **yet**. Therefore, leaving some functionality in a `view` function that modifies state, might be very dangerous. 
+While Solidity developers might be used to the pattern that `view` functions do not modify state, this is not enforced in StarkNet **yet**. Therefore, leaving some functionality in a `view` function that modifies state, might be very dangerous.
 
-Until this is enfocred, it is recommended to make sure that `view` function are only used to read data from storage or to perform certain calculations (something like a helper function which you want to make public). 
+Until this is enfocred, it is recommended to make sure that `view` function are only used to read data from storage or to perform certain calculations (something like a helper function which you want to make public).
 
 We can see an example in `Crytic`'s [repo](https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/cairo/view_state).
 
-## Missing Pausing functionality 
+## Missing Pausing functionality
 
 Thanks to OpenZeppelin, we have the `Pausable` library available which permits contracts to be paused by one account (usually the owner or a specific role which can only pause contracts). This is extremely useful as in the event of an attack, devs can quickly pause the contract and prevent further exploits, while they work on mitigating/fixing the issue.
 
@@ -844,12 +844,12 @@ One key takeaway from these attacks is to always make sure that an unique value 
 ```javascript
 @storage_var
 func nonces(address: felt) -> (nonce: felt):
-end 
+end
 ```
 
-Each time we make use of the nonce in our function calls, we should increase it by one, and our signing infrastructure should first fetch the current nonce value, and create a signature for the transaction. 
+Each time we make use of the nonce in our function calls, we should increase it by one, and our signing infrastructure should first fetch the current nonce value, and create a signature for the transaction.
 
-Let's look at some vulnerable code. For this we assume that we have a contract for a Play-2-Earn (P2E) browser-based game. Users can play in their browser, and once they finish the game, they are rewarded some in-game (and fully off-chain) currency. This currency is exchangeable 1-1 to the ecosystem token, and users need a valid signature for the contract call to work (note that this needs to be signed by a `signer` controlled by the protocol and include the user's address and amount of tokens). 
+Let's look at some vulnerable code. For this we assume that we have a contract for a Play-2-Earn (P2E) browser-based game. Users can play in their browser, and once they finish the game, they are rewarded some in-game (and fully off-chain) currency. This currency is exchangeable 1-1 to the ecosystem token, and users need a valid signature for the contract call to work (note that this needs to be signed by a `signer` controlled by the protocol and include the user's address and amount of tokens).
 
 To keep this example as simple as possible, let's assume that the in-game currency supply is infinite (We know, not too smart considering it is exchangeable 1-1 with the ecosystem token).
 
@@ -858,14 +858,14 @@ The code in charge of converting the in-game currency to the ecosystem token is 
 ```javascript
 @external
 func swap_game_currency{
-    syscall_ptr : felt*, 
-    pedersen_ptr : HashBuiltin*, 
+    syscall_ptr : felt*,
+    pedersen_ptr : HashBuiltin*,
     range_check_ptr,
     ecdsa_ptr : SignatureBuiltin*
     }(
-        r: felt, 
+        r: felt,
         s: felt,
-        amount: felt 
+        amount: felt
     ):
     alloc_locals
     let (local caller_address) = get_caller_address()
@@ -885,7 +885,7 @@ func swap_game_currency{
 end
 ```
 
-This function accepts the amount and the signature values `r` and `s`. If the signature checks out, it will get the address of the ecosystem token, and transfer the amount to the caller. An attacker could replay the transaction and call this function as many times as they like, as long as the `amount` parameter is the same of the original signed message. 
+This function accepts the amount and the signature values `r` and `s`. If the signature checks out, it will get the address of the ecosystem token, and transfer the amount to the caller. An attacker could replay the transaction and call this function as many times as they like, as long as the `amount` parameter is the same of the original signed message.
 
 
 The "safe" version of this code is presented below:
@@ -893,21 +893,21 @@ The "safe" version of this code is presented below:
 ```javascript
 @external
 func swap_game_currency_safe{
-    syscall_ptr : felt*, 
-    pedersen_ptr : HashBuiltin*, 
+    syscall_ptr : felt*,
+    pedersen_ptr : HashBuiltin*,
     range_check_ptr,
     ecdsa_ptr : SignatureBuiltin*
     }(
-        r: felt, 
+        r: felt,
         s: felt,
-        amount: felt 
+        amount: felt
     ):
     alloc_locals
     let (local caller_address) = get_caller_address()
     let (local nonce) = nonces.read(caller_address)
     let (_signer) = signer.read()
 
-    # update nonce 
+    # update nonce
     nonces.write(caller_address, value=nonce+1)
 
     let (message) = hash2{hash_ptr=pedersen_ptr}(amount, caller_address)
@@ -923,7 +923,7 @@ func swap_game_currency_safe{
     IERC20.transferFrom(contract_address=token_address_, sender=contract_address, recipient=caller_address, amount=Uint256(amount, 0))
 
     return ()
-end 
+end
 ```
 
 As you can see, what we do differently here is add a ***nonce*** value to the function. As mentioned above, the backend would first pull the nonce value for an account, and use it to generate the signature. For each function call, the current user nonce is pulled from storage, and increased by 1, so that the next call will use the updated value.
@@ -945,11 +945,11 @@ The proposed solution is to name storage variables accordingly. For instance two
 
 And if you want to have a go at exploiting this vulnerability, here is the [winning](https://github.com/milancermak/cairo-underhanded) submission of the Cairo underhanded challenge. (Contest by [Nethermind](https://twitter.com/nethermindeth) and submission by [@milancermak](https://twitter.com/milancermak)).
 
-## Interacting with Arbitrary Tokens 
+## Interacting with Arbitrary Tokens
 
 When interacting with arbitrary tokens, always make sure that transfers are validated with appropriate balance checks as these tokens might not implement the same logic on transfer.
 
-Imagine you are using some untrusted token in your contract. We recommend to check that the balance before, and the balance after match the amount transferred. This could be the case in a AMM with no limitation as to which token can be exchanged. 
+Imagine you are using some untrusted token in your contract. We recommend to check that the balance before, and the balance after match the amount transferred. This could be the case in a AMM with no limitation as to which token can be exchanged.
 
 Pseudo-code steps:
 
@@ -983,23 +983,23 @@ func transferFrom{
         ERC20.transfer_from(sender, contract_address, Uint256(1, 0))
     else:
         ERC20.transfer_from(sender, recipient, amount)
-    end 
+    end
     return (TRUE)
 end
 ```
 
-Here we changed the transfer to subtract one token from each transfer if the amount transferred is greater or equal than two. 
+Here we changed the transfer to subtract one token from each transfer if the amount transferred is greater or equal than two.
 
 Now let's look at a simple contract that allows someone to pay someone else (it's not a realistic example, but it would work to explain this concept).
 
 ```javascript
 @external
 func pay_someone{
-    syscall_ptr : felt*, 
-    pedersen_ptr : HashBuiltin*, 
+    syscall_ptr : felt*,
+    pedersen_ptr : HashBuiltin*,
     range_check_ptr
     }(
-        amount : Uint256, 
+        amount : Uint256,
         receiver: felt,
         token: felt
     ):
@@ -1009,18 +1009,18 @@ func pay_someone{
 end
 ```
 
-This function simply takes the caller address, and calls `transferFrom` to transfer assets to the specified receiver. 
+This function simply takes the caller address, and calls `transferFrom` to transfer assets to the specified receiver.
 
 How do we make this function "safe"?
 
 ```javascript
-@external 
+@external
 func pay_someone_safe{
-    syscall_ptr : felt*, 
-    pedersen_ptr : HashBuiltin*, 
+    syscall_ptr : felt*,
+    pedersen_ptr : HashBuiltin*,
     range_check_ptr
     }(
-        amount : Uint256, 
+        amount : Uint256,
         receiver: felt,
         token: felt
     ):
@@ -1032,39 +1032,39 @@ func pay_someone_safe{
     let (is_equal) = uint256_eq(balance_after, calculated_balance)
     with_attr error_message("The balance is not correct"):
         assert is_equal = 1
-    end 
+    end
     return ()
-end 
+end
 ```
 
-What we do above, is to get the balance before the transfer and store it in a variable. Then we proceed with the transfer, and check the balance again. 
-Finally, we revert if the previous balance + the amount transferred is not equal to the new balance. 
+What we do above, is to get the balance before the transfer and store it in a variable. Then we proceed with the transfer, and check the balance again.
+Finally, we revert if the previous balance + the amount transferred is not equal to the new balance.
 
-A token doesn't have to be malicious for this to apply, we've seen in the past that certain tokens charge a fee on transfer (which might or might not go towards the liquidity pool, but that's another story), protocols should consider whether to allow these types of tokens to be used in their protocol. When in doubt, always implement the checks described above to be on the safe side. 
+A token doesn't have to be malicious for this to apply, we've seen in the past that certain tokens charge a fee on transfer (which might or might not go towards the liquidity pool, but that's another story), protocols should consider whether to allow these types of tokens to be used in their protocol. When in doubt, always implement the checks described above to be on the safe side.
 
 ## Missing Zero Address Checks
 
-In StarkNet, you can send transactions without using a contract account. The syscall `get_caller_adress` will always return zero in that case. 
+In StarkNet, you can send transactions without using a contract account. The syscall `get_caller_adress` will always return zero in that case.
 
-Imagine you were able to transfer tokens to the address zero by mistake (OZ libraries prevent that actually but this is an example), now someone could directly call the contract and steal those funds. 
+Imagine you were able to transfer tokens to the address zero by mistake (OZ libraries prevent that actually but this is an example), now someone could directly call the contract and steal those funds.
 
-To mitigate this vector it is possible to use the `assert_not_zero` function from the [Cairo math lib](https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/math.cairo). This will ensure that the address is not zero'd by mistake or design. 
+To mitigate this vector it is possible to use the `assert_not_zero` function from the [Cairo math lib](https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/math.cairo). This will ensure that the address is not zero'd by mistake or design.
 
->Please note that this will likely not be a problem anymore as mandatory fees are fully introduced, as it will not be possible to directly call a contract. 
+>Please note that this will likely not be a problem anymore as mandatory fees are fully introduced, as it will not be possible to directly call a contract.
 >
-> We would still recommend exercising caution especially with addresses, and making sure that transferring ownership to the address zero (unless of course someone is renouncing ownership of a contract) should be prevented. 
+> We would still recommend exercising caution especially with addresses, and making sure that transferring ownership to the address zero (unless of course someone is renouncing ownership of a contract) should be prevented.
 >
 >Here on the OZ cairo contract [repo](https://github.com/OpenZeppelin/cairo-contracts/issues/148) there is a short discussion of the matter, related to an issue that was identified in their `ERC721` contract just before release of the first version of `cairo-contracts`.
 
 ## Missing Zero Value Checks
 
-Similar to the attack vector described above, it is important to check that non-address values are also not zero. While addresses are always of type `felt`, we will include `Uint256` values too. 
+Similar to the attack vector described above, it is important to check that non-address values are also not zero. While addresses are always of type `felt`, we will include `Uint256` values too.
 
 In order to prevent values from being zero, we can use the `assert_not_zero` function from the library mentioned above on `felt` values. Additionally, you can use it on the `.low` and/or `.high` part of a Uint256 (which are a felt as we discussed in sections above).
 
-There are other libraries to compare values that can also be used, such as the ones found in StarkNet's `math_cmp` library. 
+There are other libraries to compare values that can also be used, such as the ones found in StarkNet's `math_cmp` library.
 
-What is important here, is that values are always within an acceptable boundary, this way we can mitigate both malicious and benign mistakes. 
+What is important here, is that values are always within an acceptable boundary, this way we can mitigate both malicious and benign mistakes.
 Of course, there will be cases where allowing zero (or any value) is appropriate, such as a lending protocol where admin can set the fees, or allowing arbitrary fees that (based on some extra logic) would result in a pool being disabled. As such, developer discretion should be used when handling zero values.
 
 ## Toolchain and Best Practices
@@ -1085,12 +1085,12 @@ Also, keep an eye out for security fixes in the changelog of your used libraries
 
 How do you make contracts upgreadable? Well thanks to OpenZeppelin libraries and StarkNet's design, it is possible to implement these in a simple way.
 
-Please refer to their [guide](https://docs.openzeppelin.com/contracts-cairo/0.3.1/proxies) for the official explanation. In terms of security, what we want to make sure is that our implementation contracts are initialized by the contract developers, and that sensitive functions (such as `upgrade`) are protected by access control. 
+Please refer to their [guide](https://docs.openzeppelin.com/contracts-cairo/0.3.1/proxies) for the official explanation. In terms of security, what we want to make sure is that our implementation contracts are initialized by the contract developers, and that sensitive functions (such as `upgrade`) are protected by access control.
 
 Let's look at an example (one that works correctly).
 
-Here is the default Proxy preset provided by [OZ](https://github.com/OpenZeppelin/cairo-contracts/blob/main/src/openzeppelin/upgrades/presets/Proxy.cairo). This is very simple, has the `__default__` function (which is like our fallback in Solidity), a L1 handler, and a constructor. 
-Before deploying this contract, developers should make sure to declare the contract class of their implementation contract. 
+Here is the default Proxy preset provided by [OZ](https://github.com/OpenZeppelin/cairo-contracts/blob/main/src/openzeppelin/upgrades/presets/Proxy.cairo). This is very simple, has the `__default__` function (which is like our fallback in Solidity), a L1 handler, and a constructor.
+Before deploying this contract, developers should make sure to declare the contract class of their implementation contract.
 After, they can deploy the Proxy contract and pass the `implementation_hash` as parameter.
 
 The actual Proxy library contract contains a couple of `storage_var` as seen below:
@@ -1109,23 +1109,23 @@ func Proxy_initialized() -> (initialized: felt):
 end
 ```
 
-What would happen if someone was able to initialize your implementation contract before you? 
+What would happen if someone was able to initialize your implementation contract before you?
 
-Most of the times, developers would realize that and simply re-deploy and initialize again, however that might end up costing more gas than expected. If the developers do not realize that their contract was initialized by another party, this could be very problematic. For instance, this could happen if the initialization function is not throwing an error and silently return even if already initialized. An attacker that was able to initialize certain contracts, would likely be set as the admin of the contract and perform various attacks based on the contract's functionalities. 
+Most of the times, developers would realize that and simply re-deploy and initialize again, however that might end up costing more gas than expected. If the developers do not realize that their contract was initialized by another party, this could be very problematic. For instance, this could happen if the initialization function is not throwing an error and silently return even if already initialized. An attacker that was able to initialize certain contracts, would likely be set as the admin of the contract and perform various attacks based on the contract's functionalities.
 
-To counter this, always use the `initializable` [library](https://github.com/OpenZeppelin/cairo-contracts/blob/main/src/openzeppelin/security/initializable/library.cairo) for contracts that have init functions, as well as make sure that your deployment includes initialization. 
+To counter this, always use the `initializable` [library](https://github.com/OpenZeppelin/cairo-contracts/blob/main/src/openzeppelin/security/initializable/library.cairo) for contracts that have init functions, as well as make sure that your deployment includes initialization.
 
 On top of OpenZeppelin's documentation linked above, a detailed guide on how to use the Proxy pattern is provided by Empiric Network [here](https://medium.com/@EmpiricNetwork/starknet-guide-writing-upgradable-contracts-using-a-proxy-af3f107f238b).
 
-### Deploying your implementation contract 
+### Deploying your implementation contract
 
 Reading off StarkNet's official documentation:
 
 > Unlike Ethereum, StarkNet distinguishes between a contract class and a contract instance. A contract class represents the code of a contract (but with no state), while a contract instance represents a specific instance of the class, with its own state.
 
-One mistake that StarkNet's developer can make, is to actually deploy the implementation contract, not just the proxy (we can see an example on this year [Paradigm CTF](https://github.com/amanusk/cairo-paradigm-ctf/blob/main/paradigm-ctf-infrastructure/images/cairo-challenge-base/cairo_sandbox/proxy-chal.py)). The implementation is supposed to be declared as a contract class, and the hash passed to the Proxy constructor so that it knows where to delegate its calls. 
+One mistake that StarkNet's developer can make, is to actually deploy the implementation contract, not just the proxy (we can see an example on this year [Paradigm CTF](https://github.com/amanusk/cairo-paradigm-ctf/blob/main/paradigm-ctf-infrastructure/images/cairo-challenge-base/cairo_sandbox/proxy-chal.py)). The implementation is supposed to be declared as a contract class, and the hash passed to the Proxy constructor so that it knows where to delegate its calls.
 
-The whole purpose of using a proxy pattern, thus using the storage of the Proxy and functionality of the implementation would not be fulfilled in this case, as someone would just be able to directly interact with the implementation contract, which would have its own state. 
+The whole purpose of using a proxy pattern, thus using the storage of the Proxy and functionality of the implementation would not be fulfilled in this case, as someone would just be able to directly interact with the implementation contract, which would have its own state.
 
 To recap, always make sure that your implementation contracts are declared first, and then only the Proxy(s) are deployed. Finally, initialize the implementation contract via the Proxy. Some more details on how contract classes work is described on Starknet's [documentation](https://docs.starknet.io/docs/Contracts/contract-classes).
 
@@ -1136,7 +1136,7 @@ You can declare a contract class in different ways with either `nile` or directl
 
 The output would look something like this:
 
-```bash 
+```bash
 Declare transaction was sent.
 Contract class hash: 0x1e2208b571b2cb68908f37a196ed5e391c8933a6db23bb3939acedee40d9b8a
 Transaction hash: 0x762e166dd3326b2e263eb5bcfdccd225dc88e067fdf7c92cf8ce5e4ea01f9f1
@@ -1144,15 +1144,15 @@ Transaction hash: 0x762e166dd3326b2e263eb5bcfdccd225dc88e067fdf7c92cf8ce5e4ea01f
 
 As stated above, the contract class hash should then be passed to the Proxy constructor as follow:
 
-```bash 
+```bash
 nile deploy proxy 0x1e2208b571b2cb68908f37a196ed5e391c8933a6db23bb3939acedee40d9b8a --alias my_proxy
 ```
 
-## Oracles 
+## Oracles
 
-Oracles are the go to solution for accessing off-chain data on-chain. These are used for receiving price feeds, or other data needed in a smart contract like a random number. 
+Oracles are the go to solution for accessing off-chain data on-chain. These are used for receiving price feeds, or other data needed in a smart contract like a random number.
 
-### Price Feeds 
+### Price Feeds
 
 In StarkNet we have two working price feed oracles (apologies if we missed any):
 
@@ -1161,13 +1161,13 @@ In StarkNet we have two working price feed oracles (apologies if we missed any):
 
 Always use price feeds from reputable sources when you need to fetch token prices on chain. Let's take as an example a protocol that makes use of stablecoins. We have seen in the past that stablecoins sometimes are not that stable, and it happens sometimes that protocols just assume that their price will always be one dollar (yes this really happens).   
 
-Imagine if this one stablecoin now depegs, and people are able to get discounted loans on a lending protocol because they can buy that token for half price, while the protocol always counts it as 1$. Well, our friendly devs above, made a pretty easy to use solution for us, so make good use of it. 
+Imagine if this one stablecoin now depegs, and people are able to get discounted loans on a lending protocol because they can buy that token for half price, while the protocol always counts it as 1$. Well, our friendly devs above, made a pretty easy to use solution for us, so make good use of it.
 
-For Empiric Network, you can use the following [guide](https://docs.empiric.network/quickstart), and [this one](https://docs.stork.network/quick-start) for Stork. 
+For Empiric Network, you can use the following [guide](https://docs.empiric.network/quickstart), and [this one](https://docs.stork.network/quick-start) for Stork.
 
 All it really takes is just a couple of lines as shown below (plus of course a couple of other variables you want to use to store the feeds keys):
 
-```javascript 
+```javascript
 @view
 func my_func{
     syscall_ptr : felt*,
@@ -1185,7 +1185,7 @@ func my_func{
 end
 ```
 
-Please note the risk of trusting a third-party, so make your due diligence before choosing which option to implement in your contract. 
+Please note the risk of trusting a third-party, so make your due diligence before choosing which option to implement in your contract.
 
 ### Pseudo Random Number Generators
 
@@ -1194,7 +1194,7 @@ Whenever you need to generate random values in your code, please refrain from us
 With StarkNet, solutions are being built as we speak:
 
 * Empiric Network is working on their implementation
-* 0xNonCents just deployed a [VRF](https://twitter.com/0xNonCents/status/1555288515314946049) in the Testnet 
+* 0xNonCents just deployed a [VRF](https://twitter.com/0xNonCents/status/1555288515314946049) in the Testnet
 * Someone else? Maybe ChainLink or a bridge for VRF from mainnet to StarkNet? (a bridge might be very expensive compared to a native solution though)
 
 Imagine someone was using a contract address modulo some number as a source of randomness, this could go really bad.
@@ -1212,17 +1212,17 @@ contract_address := pedersen(
 
 With the right amount of time, an attacker might be able to deploy a contract with an arbitrary address that would result in the "randomness" being bypassed, so make sure you stick to using a VRF.
 
-As with the Price Feeds section above, exercise caution when using third-party code, make sure this is open source and can be verified, as requesting a random number from a Oracle would usually result in their contract making a call to your contract. Always check that the VRF callback function is protected from reentrancy (should it implement further logic than just storing the number) and that it can only be called from the Oracle contract address. 
+As with the Price Feeds section above, exercise caution when using third-party code, make sure this is open source and can be verified, as requesting a random number from a Oracle would usually result in their contract making a call to your contract. Always check that the VRF callback function is protected from reentrancy (should it implement further logic than just storing the number) and that it can only be called from the Oracle contract address.
 
 ## Logic Flaws
 
-As with any system, developers implementing business logic may make  mistakes which could result in loss of funds. We believe it is difficult to generalize these type of bugs, and it is up to the auditor and their past experience to find them. Often, these bugs encompass portions of all other bugs that have and will be described in this post. 
+As with any system, developers implementing business logic may make  mistakes which could result in loss of funds. We believe it is difficult to generalize these type of bugs, and it is up to the auditor and their past experience to find them. Often, these bugs encompass portions of all other bugs that have and will be described in this post.
 
 This is why performing extensive auditing is essential to the development of contracts on any platform.
 
 > We will update this section as more audits are conducted and examples are made public.
 
-## Frontrunning 
+## Frontrunning
 
 Is frontrunning a thing in StarkNet? Well, AFAIK there is no public mempool (yet?).. But I would still exercise caution. Also, things might change with the introduction of decentralized sequencers, some people talk about sequencer extractable value.
 
@@ -1236,7 +1236,7 @@ sellTicket(ticketId: felt, price: felt)
 
 This function above will store the ticket in a storage variable such as the following:
 
-```javascript 
+```javascript
 @storage_var
 func tickets_on_sale(ticketId: felt) -> (price: felt)
 ```
@@ -1259,70 +1259,70 @@ The function should validate that the price stored in the contract matches the p
 
 These types of attacks are very common in this world, especially in AMMs, where MEV bots would sandwich transactions in low liquidity pools, should they see they can make a good profit (and would most often than not this would include a flashloan).
 
-## Governance Attacks 
+## Governance Attacks
 
-With Solidity, we have seen many governance attacks being carried out. For instance, protocols counting voting power based on the balance of the caller on the time of calling a function (flashloans anyone?), or not enforcing a timelock on a proposal, and allowing malicious users from self-approving and executing the proposal straight away. 
+With Solidity, we have seen many governance attacks being carried out. For instance, protocols counting voting power based on the balance of the caller on the time of calling a function (flashloans anyone?), or not enforcing a timelock on a proposal, and allowing malicious users from self-approving and executing the proposal straight away.
 
 Will the same mistakes be made in StarkNet's protocols too?
 
-> This section will be updated as the authors find the time to implement some example scenarios, or others are made public. 
+> This section will be updated as the authors find the time to implement some example scenarios, or others are made public.
 
 ## Denial of Service (DoS)
 
-> This is an area which needs more research, and will be updated soon. 
+> This is an area which needs more research, and will be updated soon.
 
 Outside of StarkNet, we observed denial of service scenarios in a number of cases:
 
 * Contracts using external paid services like ChainLink's VRF and allowing anyone to instantiate a request (thus making the contract pay `$LINK` tokens)
 * Users blocking refunds by `reverting` in a smart contract's fallback function (observed in NFT mint contracts which include refunding gas to all minters in a for loop)
-* Reaching block gas limit by large loops making external calls 
+* Reaching block gas limit by large loops making external calls
 
 It will be interesting seeing what opportunities for DoS are encountered in StarkNet (and hopefully caught first by an audit).
 
 To conclude (for now), we should consider that at this stage of StarkNet's life, transactions can be censored. As of the time of writing this first iteration of this post, the sequencer is centralized. Therefore, it might be possible that transactions are censored and this can cause huge damage. We have seen this described by ChainSecurity in their MakerDAO DAI bridge [report](https://chainsecurity.com/wp-content/uploads/2021/12/ChainSecurity_MakerDAO_StarkNet-DAI-Bridge_audit.pdf). Things will of course change as decentralized sequencers are introduced in StarkNet.
 
-## Not using Static Code Analyzers 
+## Not using Static Code Analyzers
 
-While static code analysis should not be considered as a replacement of a security audit, they can help find low-hanging fruits in your Cairo code (or any other code), so why not use them? 
+While static code analysis should not be considered as a replacement of a security audit, they can help find low-hanging fruits in your Cairo code (or any other code), so why not use them?
 
-Trail of Bits developed [Amarna](https://github.com/crytic/amarna). For more information please refer to their GitHub and to their blog post [here](https://blog.trailofbits.com/2022/04/20/amarna-static-analysis-for-cairo-programs/). For instance, ***Amarna*** will detect some of the issues being described here, such as `view` functions modifying state, or `storage_var` name clashing. 
+Trail of Bits developed [Amarna](https://github.com/crytic/amarna). For more information please refer to their GitHub and to their blog post [here](https://blog.trailofbits.com/2022/04/20/amarna-static-analysis-for-cairo-programs/). For instance, ***Amarna*** will detect some of the issues being described here, such as `view` functions modifying state, or `storage_var` name clashing.
 
 Our kind [@franalgaba](https://github.com/franalgaba) and [@milancermak](https://github.com/milancermak) have written [this](https://github.com/franalgaba/pre-commit-cairo) Cairo pre-commit hook that can run your code through some checks while committing the code.
 
-## How do you prepare for an audit? 
+## How do you prepare for an audit?
 
-Every respectable project that wants to launch, should undergo a security audit before going live. This is important, as even if your devs are the "best", humans make mistakes. 
+Every respectable project that wants to launch, should undergo a security audit before going live. This is important, as even if your devs are the "best", humans make mistakes.
 
 As a rule of thumb, and if funding allow it, you should aim  to have two companies audit your project, so that if someone misses something, there is a very good chance the other auditor/s find it. Also, running a bug bounty program on a platform such as [Immunefi](https://immunefi.com/) is a good way to incentivize white hat hackers to look at your code and help you. Finally, [Code4rena](https://code4rena.com/) is a great way to have some of the best minds in blockchain security try to break your code.
 
 Going back to answering the question of how to prepare for an audit, we recommend to follow this checklist:
 
-- [ ] Make sure that the code is well commented 
+- [ ] Make sure that the code is well commented
 - [ ] Make sure that appropriate documentation is produced (more often than not, writing up documentation will lead you to find some bugs yourself)
 - [ ] Implement thorough test cases (Auditors really appreciate that)
 - [ ] Research audit companies and choose one which fits your budget and which you would feel safe with
 - [ ] Identify areas of concern which you believe that might have bugs (This gives the auditor a good starting point)
 - [ ] Gather documentation and updated deployment scripts to allow auditors to hit the ground running
 
-## Testing Tools 
+## Testing Tools
 
 Which frameworks can you use to test Cairo contracts?
 
 Well, luckily you have many options (all links are in the section below):
 
-* `Protostar` - if you want to benefit from Rust's speed and write your tests directly in Cairo 
+* `Protostar` - if you want to benefit from Rust's speed and write your tests directly in Cairo
 * `Nile` - if you like Python and want to perform quick tests via the CLI or build more complex tests using their plugin system
 * `Pytest` and StarkNet testing class (refer to cairo-contracts test suites to see how to use it)
 * `Starknet-devnet` to launch a local environment where you can perform local testing (works in tandem with nile and/or the starknet CLI)
 * `StarkNet` plugin for HardHat - a plugin to use StarkNet with HardHat for developing and testing smart contracts
-* `Ape Worx` - a Bronwie like framework that can be used to develop and test smart contracts on different chains. Written in Python
-* `Starknet-py` - a Python library for developing and testing StarkNet smart contracts 
+* `Ape Worx` - a Brownie like framework that can be used to develop and test smart contracts on different chains. Written in Python
+* `Starknet-py` - a Python library for developing and testing StarkNet smart contracts
 
-> Please let us know what we missed, and they will be added. 
+> Please let us know what we missed, and they will be added.
 
 ## References
 
-Here are all of the links that have been used in this research (plus some extra), and that have been mentioned. Thanks to everyone for their great content, and for making StarkNet awesome. 
+Here are all of the links that have been used in this research (plus some extra), and that have been mentioned. Thanks to everyone for their great content, and for making StarkNet awesome.
 
 * StarkWare - [Cairo whitepaper](https://eprint.iacr.org/2021/1063)
 * StarkWare - [StarkNet Docs](https://docs.starknet.io/)
@@ -1355,8 +1355,8 @@ Here are all of the links that have been used in this research (plus some extra)
 * CoinMarketCap - [DAO hack](https://coinmarketcap.com/alexandria/article/a-history-of-the-dao-hack)
 * Jordan McKinney - [the Felt integer type explained](https://www.youtube.com/watch?v=jcrAq71WwSM)
 
-## P.S. 
+## P.S.
 
-> This guide will be maintained and examples and new sections added as more research is conducted. We also encourage other devs and auditors to contribute to it and give feedback. 
+> This guide will be maintained and examples and new sections added as more research is conducted. We also encourage other devs and auditors to contribute to it and give feedback.
 
 [Repository link](https://github.com/ctrlc03/ctrlc03.github.io)
