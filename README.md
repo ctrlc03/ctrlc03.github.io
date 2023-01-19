@@ -638,7 +638,7 @@ On top of that, should you need to implement custom types, such as `uint64` or `
 So how do you prevent overflows? There are a number of secure libraries for math operations that should be used when writing Cairo contracts:
 
 * [felt library from Nethermind](https://github.com/NethermindEth/Cairo-SafeMath)
-* [Uint256 library from OpenZeppelin](https://github.com/OpenZeppelin/cairo-contracts/blob/main/src/openzeppelin/security/safemath.cairo)
+* [Uint256 library from OpenZeppelin](https://github.com/OpenZeppelin/cairo-contracts/blob/main/src/openzeppelin/security/safemath/library.cairo)
 
 
 ## L1<>L2 Operations
