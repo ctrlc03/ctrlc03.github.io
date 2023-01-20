@@ -1203,7 +1203,7 @@ With StarkNet, solutions are being built as we speak:
 
 Imagine someone was using a contract address modulo some number as a source of randomness, this could go really bad.
 
-A contract address will be the result of the formula below (please refer to the [technical documentation](https://docs.starknet.io/docs/Contracts/contract-address) for more details):
+A contract address will be the result of the formula below (please refer to the [technical documentation](https://docs.starknet.io/documentation/architecture_and_concepts/Contracts/contract-address/) for more details):
 
 ```golang
 contract_address := pedersen(
