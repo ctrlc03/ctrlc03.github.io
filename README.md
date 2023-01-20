@@ -768,7 +768,7 @@ Given a `storage_var` key and a value, an user could overwrite the storage of th
 
 We can see another example on `Crytic`'s [repo](https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/cairo/dangerous_public_imports_in_libraries).
 
-> Note: Since [Cairo v0.10.0](https://github.com/starkware-libs/cairo-lang/releases/tag/v0.10.0), this issue has been fixed and only directly imported files with the @external and @view decorator get imported. All contracts compiled and deployed with previous versions are of course still vulnerable.
+> Note: Since [Cairo v0.10.0](https://github.com/starkware-libs/cairo-lang/releases/tag/v0.10.0), this issue has been fixed and only directly imported functions with the `@external` and `@view` decorator get imported. All contracts compiled and deployed with previous versions are of course still vulnerable.
 
 ## View Functions that modify the state
 
@@ -946,6 +946,8 @@ The proposed solution is to name storage variables accordingly. For instance two
 * `LibraryB_balance`
 
 And if you want to have a go at exploiting this vulnerability, here is the [winning](https://github.com/milancermak/cairo-underhanded) submission of the Cairo underhanded challenge. (Contest by [Nethermind](https://twitter.com/nethermindeth) and submission by [@milancermak](https://twitter.com/milancermak)).
+
+> Note: Since [Cairo v0.10.0](https://github.com/starkware-libs/cairo-lang/releases/tag/v0.10.0), this issue has been fixed, as the compiler now enforces that all storage variables between modules are unique. The proposed solution to keep the storage variable names unique still applies. All contracts compiled and deployed with previous versions are of course still vulnerable.
 
 ## Interacting with Arbitrary Tokens
 
