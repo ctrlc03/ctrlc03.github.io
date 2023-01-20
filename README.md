@@ -768,7 +768,7 @@ Given a `storage_var` key and a value, an user could overwrite the storage of th
 
 We can see another example on `Crytic`'s [repo](https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/cairo/dangerous_public_imports_in_libraries).
 
-> Note: Since [Cairo v0.10.0](https://github.com/starkware-libs/cairo-lang/releases/tag/v0.10.0), this issue has been fixed and only directly imported functions with the `@external` and `@view` decorator get imported. All contracts compiled and deployed with previous versions are of course still vulnerable.
+> Note: Since [Cairo v0.10.0](https://github.com/starkware-libs/cairo-lang/releases/tag/v0.10.0), this issue has been fixed and only directly imported functions with the `@external` and `@view` decorator are exposed. All contracts compiled and deployed with previous versions are of course still vulnerable.
 
 ## View Functions that modify the state
 
