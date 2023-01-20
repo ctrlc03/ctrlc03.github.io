@@ -1131,7 +1131,7 @@ One mistake that StarkNet's developer can make, is to actually deploy the implem
 
 The whole purpose of using a proxy pattern, thus using the storage of the Proxy and functionality of the implementation would not be fulfilled in this case, as someone would just be able to directly interact with the implementation contract, which would have its own state.
 
-To recap, always make sure that your implementation contracts are declared first, and then only the Proxy(s) are deployed. Finally, initialize the implementation contract via the Proxy. Some more details on how contract classes work is described on Starknet's [documentation](https://docs.starknet.io/docs/Contracts/contract-classes).
+To recap, always make sure that your implementation contracts are declared first, and then only the Proxy(s) are deployed. Finally, initialize the implementation contract via the Proxy. Some more details on how contract classes work is described on Starknet's [documentation](https://docs.starknet.io/documentation/architecture_and_concepts/Contracts/contract-classes/).
 
 You can declare a contract class in different ways with either `nile` or directly with the `starket-cli` (plus using all other tools available or SDKs):
 
@@ -1203,7 +1203,7 @@ With StarkNet, solutions are being built as we speak:
 
 Imagine someone was using a contract address modulo some number as a source of randomness, this could go really bad.
 
-A contract address will be the result of the formula below (please refer to the [technical documentation](https://docs.starknet.io/docs/Contracts/contract-address) for more details):
+A contract address will be the result of the formula below (please refer to the [technical documentation](https://docs.starknet.io/documentation/architecture_and_concepts/Contracts/contract-address/) for more details):
 
 ```golang
 contract_address := pedersen(
