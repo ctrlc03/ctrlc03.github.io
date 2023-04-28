@@ -1,12 +1,14 @@
 ---
 title: "Learning Circom"
 date: 2023-04-28T10:40:30+01:00
-draft: true
+draft: false
 pin: true
 summary: Learning Circom together
 ---
 
-# Circom 101
+# Circom 101 
+
+> In progress
 
 Trying to learn Circom by going through the basic circuits (that come with [circomlib](https://github.com/iden3/circomlib)).
 
