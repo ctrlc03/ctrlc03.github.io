@@ -69,7 +69,9 @@ There are different ways of assigning signals (the direction of the arrow depend
 * `-->` - assign but no constraint is generated (dangerous)
 * `==>` - assign and generate a constraint
 
-## IsZero
+## Templates
+
+### IsZero
 
 This simple circuit allows to check whether a value is equal to zero or not.
 
@@ -118,7 +120,45 @@ template Bits2Num(n) {
         e2 = e2 + e2;
     }
 
-    // assign the result to the output
+    // assign and constrain the result to the output
     lc1 ==> out;
+}
+```
+
+
+### Mux1
+
+```js
+
+template MultiMux1(n) {
+    // multi dimensional array of n and 2 elements
+    signal input c[n][2];  // Constants
+    signal input s;   // Selector
+    // output 
+    signal output out[n];
+
+    // loop through each element
+    for (var i=0; i<n; i++) {
+        // 2nd - 1st * selector + 1st
+        out[i] <== (c[i][1] - c[i][0])*s + c[i][0];
+    }
+}
+
+template Mux1() {
+    // tmp var (could be directly added inside the loop)
+    var i;
+    signal input c[2];  // Constants
+    signal input s;   // Selector
+    signal output out;
+
+    component mux = MultiMux1(1);
+
+    for (i=0; i<2; i++) {
+        mux.c[0][i] <== c[i];
+    }
+
+    s ==> mux.s;
+
+    mux.out[0] ==> out;
 }
 ```
