@@ -14,9 +14,9 @@ How the MACI v1 ceremony [website](https://mpc-tool-ctrlc03.web.app/) was built.
 
 In three simple steps:
 
-Step 1. Get a good designer, it's incredible how a good design makes everything easier for a dev. 
-Step 2. Figma has many plugins which can be used to port the design to some sort of React code/CSS. We decided to use [FigPilot](https://figma.chakra-ui.com/) which generates a somewhat working React code using Chakra UI. 
-Step 3. Modify the code to be more responsive (the output from FigPilot uses fixed measures such as pixels rather than percentages) and add colors and images.
+Step 1. Get a good designer, it's incredible how a good design makes everything easier for a dev.  
+Step 2. Figma has many plugins which can be used to port the design to some sort of React code/CSS. We decided to use [FigPilot](https://figma.chakra-ui.com/) which generates a somewhat working React code using Chakra UI.   
+Step 3. Modify the code to be more responsive (the output from FigPilot uses fixed measures such as pixels rather than percentages) and add colors and images.  
 
 ## Highlights
 
