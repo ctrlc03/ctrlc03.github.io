@@ -1,3 +1,11 @@
+---
+title: "Devlog 00001"
+date: 2023-06-01T10:40:30+01:00
+draft: false
+pin: true
+summary: "How to frontend"
+---
+
 # Devlog 23/05 - 06/06
 
 How the MACI v1 ceremony [website](https://mpc-tool-ctrlc03.web.app/) was built. Link to the [repo](https://github.com/privacy-scaling-explorations/maci-phase2-setup).
