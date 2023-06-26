@@ -1,7 +1,7 @@
 ---
 title: "Devlog 00002"
 date: 2023-06-01T10:40:30+01:00
-draft: true
+draft: false
 pin: true
 summary: "QF Research & scaling p0tion"
 ---
