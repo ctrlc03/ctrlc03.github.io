@@ -457,44 +457,30 @@ In a nutshell the function does the following:
 
 ### Let's talk DevOps 
 
-In order to use AWS VMs to verify a contribution we need to setup the correct IAM roles/permissions. 
+In order to use AWS VMs to verify a contribution we need to setup the correct IAM roles/permissions. We also want to follow the principle of least privilege and ensure that other resources in the AWS account are not at risk due to these new permissions. 
 
-The user which will be spinning up the VMs (plus access S3 for other p0tion functionality) needs the following policy:
+Therefore, I divided the policies into a general policy for the IAM user spinning up S3 buckets and EC2 instances, and 2 special policies for privileged functions on both S3 and EC2 - each with a condition of the Name tag of the resource to equal a particular string. Unfortunately it is not possible to use a resource based condition on the bucket tag itself, only the objects. However, this works fine for EC2 instances. Surely terminating an instance is much more dangerous, and for other buckets we can set an inline policy to prevent deletion by anyone but the bucket owner. 
 
+**General policy**
 
 ```json 
 {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "S3andEC2",
+            "Sid": "S3andEC2andSSM",
             "Effect": "Allow",
             "Action": [
-                "s3:PutBucketOwnershipControls",
                 "s3:CreateBucket",
                 "s3:ListBucket",
                 "s3:ListMultipartUploadParts",
-                "s3:PutObject",
                 "s3:GetObject",
                 "s3:AbortMultipartUpload",
-                "s3:PutBucketAcl",
-                "s3:PutBucketObjectLockConfiguration",
-                "s3:DeleteObject",
-                "s3:DeleteBucket",
-                "s3:PutBucketVersioning",
                 "s3:GetObjectVersion",
-                "s3:PutObjectAcl",
-                "s3:PutBucketPublicAccessBlock",
-                "s3:PutBucketCORS",
+                "s3:GetBucketTagging",
                 "ec2:RunInstances",
-                "ec2:StartInstances",
-                "ec2:StopInstances",
-                "ec2:TerminateInstances",
-                "ec2:DescribeInstances",
                 "ec2:DescribeInstanceStatus",
-                "iam:PassRole",
-                "ssm:SendCommand",
-                "ssm:GetCommandInvocation"
+                "iam:PassRole"
             ],
             "Resource": "*"
         }
@@ -502,13 +488,68 @@ The user which will be spinning up the VMs (plus access S3 for other p0tion func
 }
 ```
 
+**S3 privileged access**
+
+```json 
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "S3Privileged",
+            "Effect": "Allow",
+            "Action": [
+                "s3:DeleteObject",
+                "s3:DeleteBucket",
+                "s3:PutBucketPublicAccessBlock",
+                "s3:PutBucketCORS",
+                "s3:PutBucketObjectLockConfiguration",
+                "s3:PutBucketAcl",
+                "s3:PutBucketVersioning",
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+                "s3:PutBucketOwnershipControls"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+**EC2 and SSM privileged access**
+
+```json 
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EC2Privileged",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:StopInstances",
+                "ec2:TerminateInstances",
+                "ec2:StartInstances",
+                "ssm:SendCommand",
+                "ssm:GetCommandInvocation"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/Name": "p0tionec2instance"
+                }
+            }
+        }
+    ]
+}
+```
+
+
+
 To sum up:
 
 * s3 - create and manage buckets + object permissions
 * ec2 - start, stop, terminate and describe instances
 * ssm - run a command and retrieve the output
 * iam - pass down a role (the IAM user will need to attach a instance policy to the ec2 instance)
-
 
 On the other hand, the EC2 instances will require the following instance policy:
 
@@ -543,7 +584,7 @@ In a nutshell:
 
 ### Is this secure?
 
-Yes. Thanks to IAM roles and policies, we can safely execute commands on a VM using SSM, and only the IAM user used by the cloud functions can run commands and retrieve output. We initially thought or running an API in the VM, however this would have needed to be secured using some sort of authentication (perhaps JWT); with SSM we do not have to worry about that. 
+Thanks to IAM roles and policies, we can safely execute commands on a VM using SSM, and only the IAM user used by the cloud functions can run commands and retrieve output. We initially thought or running an API in the VM, however this would have needed to be secured using some sort of authentication (perhaps JWT); with SSM we do not have to worry about that. 
 
 ### Is this more expensive?
 
