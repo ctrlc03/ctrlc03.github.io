@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280" />
+<title>{{ .Site.Params.author | default "ctrlc03" }} — {{ .Site.Title }}</title>
+<meta name="description" content="{{ .Site.Params.description }}" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="{{ "styles.css" | relURL }}" />
+</head>
+<body>
+  <div id="root"></div>
+
+  {{- $posts := slice -}}
+  {{- range (where .Site.RegularPages "Section" "post").ByDate.Reverse -}}
+    {{- $words := len (split .Plain " ") -}}
+    {{- $mins := math.Ceil (div (float $words) 220.0) -}}
+    {{- $cat := upper (cond (isset .Params "category") (string (.Params.category)) "POST") -}}
+    {{- $posts = $posts | append (dict
+      "slug"    .File.ContentBaseName
+      "title"   .Title
+      "date"    (.Date.Format "2006.01.02")
+      "summary" (.Params.summary | default "")
+      "cat"     $cat
+      "read"    (printf "%.0f MIN" $mins)
+      "body"    (string .Content)
+    ) -}}
+  {{- end -}}
+
+  {{- $projects := slice
+    (dict "slug" "interfold"     "title" "THE INTERFOLD" "tag" "Open-source protocol for confidential coordination using FHE, MPC, and ZK." "year" "2025" "role" "Senior Engineer · Gnosis Guild" "status" "In development" "tags" (slice "RUST" "SOLIDITY" "NOIR" "TS") "body" "Formerly Enclave. Enables private collaboration on confidential data for use cases like medical research, sealed-bid auctions, and voting. I implement and integrate FHE / ZK / MPC primitives into the Rust node software and architect cross-layer connections between Noir circuits, Solidity contracts, and the node." "link" "https://github.com/gnosisguild/enclave")
+    (dict "slug" "crisp"         "title" "CRISP"         "tag" "Coercion-resistant voting protocol built on the Interfold network." "year" "2025" "role" "Engineer" "status" "Demo" "tags" (slice "RUST" "FHE" "ZK") "body" "A demo application showcasing the Interfold's capabilities: a coercion-resistant on-chain voting protocol using FHE for confidential ballots." "link" "https://blog.theinterfold.com/vote-masking-receipt-freeness-secret-ballots/")
+    (dict "slug" "maci"          "title" "MACI"          "tag" "Private, coercion-free, censorship-resistant on-chain voting using zk-SNARKs." "year" "2024" "role" "Team Lead" "status" "Production" "tags" (slice "TS" "SOLIDITY" "CIRCOM") "body" "Led MACI as primary technical owner at the Ethereum Foundation's PSE — set roadmap and release priorities for a team of 5 while shipping production TypeScript, Solidity, and Circom code. Coordinated with external auditors and adjacent project maintainers." "link" "https://maci.pse.dev")
+    (dict "slug" "semaphore"     "title" "SEMAPHORE"     "tag" "Zero-knowledge protocol for anonymous signaling and group membership." "year" "2025" "role" "Team Lead" "status" "Production" "tags" (slice "TS" "SOLIDITY" "CIRCOM") "body" "Scope expanded in April 2025 to also lead Semaphore and zk-kit alongside MACI — technical direction, code review, and release coordination across all three projects." "link" "https://semaphore.pse.dev")
+    (dict "slug" "p0tion"        "title" "P0TION"        "tag" "Framework for running zk-SNARK phase-2 trusted-setup ceremonies." "year" "2023" "role" "Engineer" "status" "Open source" "tags" (slice "NODE" "TERRAFORM" "AWS" "FIREBASE") "body" "Built and operated the infrastructure that automates Groth16 phase-2 ceremonies — Terraform IaC, Firebase/GCP serverless components, AWS EC2/Lambda/S3/SNS, and CI/CD pipelines." "link" "https://github.com/privacy-scaling-explorations/p0tion")
+    (dict "slug" "definitelysetup" "title" "DEFINITELYSETUP" "tag" "Frontend for monitoring and contributing to p0tion ceremonies." "year" "2023" "role" "Engineer" "status" "Open source" "tags" (slice "REACT" "GH-ACTIONS") "body" "The contributor-facing UI for p0tion — lets anyone contribute entropy to live trusted-setup ceremonies from the browser, with progress and audit trails." "link" "https://github.com/privacy-scaling-explorations/DefinitelySetup")
+    (dict "slug" "excubiae"      "title" "EXCUBIAE"      "tag" "Modular framework for on-chain gatekeepers." "year" "2024" "role" "Contributor" "status" "Open source" "tags" (slice "SOLIDITY" "TS") "body" "Composable gatekeeper primitives for permissioned on-chain coordination — used to gate access to MACI polls and similar systems." "link" "https://github.com/privacy-scaling-explorations/excubiae")
+    (dict "slug" "zk-kit"        "title" "ZK-KIT"        "tag" "Reusable libraries for zero-knowledge applications." "year" "2025" "role" "Team Lead" "status" "Open source" "tags" (slice "TS" "CIRCOM" "NOIR") "body" "A monorepo of utilities used across PSE's ZK stack — Merkle trees, identity, proof helpers. Led release coordination and direction in 2025." "link" "https://github.com/privacy-scaling-explorations/zk-kit")
+    (dict "slug" "qfi-kmeans"    "title" "QFI-KMEANS"    "tag" "Anti-collusion research for quadratic funding via k-means clustering." "year" "2023" "role" "Author" "status" "Research" "tags" (slice "PYTHON" "RESEARCH") "body" "Exploring k-means as a more SNARK-friendly collusion detector for QF rounds — alternative to pairwise matching for use inside ZK circuits." "link" "https://github.com/ctrlc03/qfi-kmeans")
+  -}}
+
+  {{- $sidebar := slice
+    (dict "label" "Now"     "items" (slice
+      (slice "Building"   "The Interfold · Gnosis Guild")
+      (slice "Focus"      "FHE · MPC · ZK")
+      (slice "Side-quest" "this site, again")))
+    (dict "label" "Uses"    "items" (slice
+      (slice "Editor"     "VSCode")
+      (slice "Languages"  "Rust · TS · Solidity · Noir")
+      (slice "Shell"      "zsh")
+      (slice "OS"         "macOS")))
+    (dict "label" "Contact" "items" (slice
+      (slice "github"     (printf "@%s" (.Site.Params.github | default "ctrlc03")) (printf "https://github.com/%s" (.Site.Params.github | default "ctrlc03")))
+      (slice "twitter"    (printf "@%s" (.Site.Params.twitter | default "ctrlc03")) (printf "https://twitter.com/%s" (.Site.Params.twitter | default "ctrlc03")))))
+  -}}
+
+  {{- $cv := slice
+    (dict "label" "Experience" "entries" (slice
+      (dict "title" "Senior Engineer"
+            "where" "Gnosis Guild — The Interfold (formerly Enclave)"
+            "when"  "Aug 2025 — present"
+            "body"  "Implement and integrate FHE, ZK, and MPC primitives into the Rust node software powering the Interfold network. Architect cross-layer connections spanning Noir ZK circuits, Solidity smart contracts, and Rust. Built demo applications including CRISP (coercion-resistant voting) and sealed-bid auctions for DeFi. Author technical content for engineering and research audiences.")
+      (dict "title" "Team Lead — MACI, Semaphore & zk-kit"
+            "where" "Ethereum Foundation · PSE (Privacy & Scaling Explorations)"
+            "when"  "Apr 2024 — Aug 2025"
+            "body"  "Led MACI as primary technical owner — set roadmap and release priorities for a team of 5 engineers while continuing to ship production TypeScript, Solidity, and Circom code. Scope expanded in April 2025 to also lead Semaphore and zk-kit. Owned code review, mentorship, and onboarding; coordinated with external auditors, grantees, and adjacent maintainers. Represented the projects externally — 5 conference talks, 10 blog posts, recruiting, community updates.")
+      (dict "title" "Software Engineer"
+            "where" "Ethereum Foundation · PSE"
+            "when"  "Jul 2022 — Apr 2024"
+            "body"  "Developed and maintained MACI, p0tion, DefinitelySetup, Semaphore, zk-kit, and Excubiae. Managed production infrastructure for p0tion and DefinitelySetup — Terraform IaC, Firebase/GCP, AWS, CI/CD pipelines automating zk trusted-setup ceremonies. Researched anti-collusion detection for private voting and quadratic funding. Reviewed internal Solidity, TypeScript, and Circom code for security vulnerabilities. Helped run QF rounds at conferences and presented ZK material to attendees and summer-programme students.")
+      (dict "title" "Offensive Security Engineer"
+            "where" "Halborn"
+            "when"  "Sep 2021 — Jul 2022"
+            "body"  "Conducted Solidity audits of client protocols and penetration tests against web3 applications. Delivered client-facing audit reports and findings walkthroughs. Led the effort to expand the practice into ZK protocol audits, with a focus on StarkNet.")
+    ))
+    (dict "label" "Education" "entries" (slice
+      (dict "title" "BSc (Hons) Computer Forensics and Security"
+            "where" "Manchester Metropolitan University"
+            "when"  "Sep 2018 — Jul 2020"
+            "body"  "First Class Honours. Awarded CIISec Student Project of the Year.")
+    ))
+    (dict "label" "Talks" "entries" (slice
+      (dict "title" "MACI — Why do we need private voting and what are we up to"
+            "where" "Devcon 7 SEA · Applied Cryptography track"
+            "when"  "Nov 2024"
+            "body"  "https://speak.devcon.org/devcon7-sea/talk/TCJJW3/")
+      (dict "title" "MACI — Private Voting"
+            "where" "ETHGlobal Singapore"
+            "when"  "Sep 2024"
+            "body"  "https://www.youtube.com/watch?v=YAm0CXiW23o")
+      (dict "title" "MACI — Private Voting (workshop)"
+            "where" "ETHGlobal Circuit Breaker"
+            "when"  "May 2024"
+            "body"  "https://www.youtube.com/watch?v=QXVvywUOo7w")
+      (dict "title" "MACI — Private On-Chain Voting"
+            "where" "ETHDam"
+            "when"  "Apr 2024"
+            "body"  "https://www.youtube.com/watch?v=UnwtiueguXs")
+      (dict "title" "MACI — Private Voting (workshop)"
+            "where" "ETHGlobal London"
+            "when"  "Mar 2024"
+            "body"  "https://www.youtube.com/watch?v=iTea0pvwUzw")
+    ))
+    (dict "label" "Writing" "entries" (slice
+      (dict "title" "MACI Coordinator Service"
+            "where" "maci.pse.dev/blog · with NicoSerranoP"
+            "when"  "Sep 2025"
+            "body"  "https://maci.pse.dev/blog/maci-coordinator-service")
+      (dict "title" "MACI Aragon Plugin"
+            "where" "maci.pse.dev/blog · with J. Guilding, NicoSerranoP"
+            "when"  "Aug 2025"
+            "body"  "https://maci.pse.dev/blog/maci-aragon-plugin")
+      (dict "title" "2025 High-Level Roadmap and Recap"
+            "where" "maci.pse.dev/blog"
+            "when"  "Mar 2025"
+            "body"  "https://maci.pse.dev/blog/2025-Roadmap")
+      (dict "title" "The Birth of MACI Platform"
+            "where" "maci.pse.dev/blog · with Doris, Hodlon"
+            "when"  "Nov 2024"
+            "body"  "https://maci.pse.dev/blog/MACI-Platform")
+      (dict "title" "2024 Q3 Review"
+            "where" "maci.pse.dev/blog"
+            "when"  "Oct 2024"
+            "body"  "https://maci.pse.dev/blog/2024-q3-review")
+      (dict "title" "MACI v2.0 Release"
+            "where" "maci.pse.dev/blog"
+            "when"  "Aug 2024"
+            "body"  "https://maci.pse.dev/blog/2024-v2")
+      (dict "title" "2024 Q3 Roadmap"
+            "where" "maci.pse.dev/blog"
+            "when"  "Jul 2024"
+            "body"  "https://maci.pse.dev/blog/2024-q3-roadmap")
+      (dict "title" "2024 Q2 Review"
+            "where" "maci.pse.dev/blog"
+            "when"  "Jul 2024"
+            "body"  "https://maci.pse.dev/blog/2024-q2-review")
+      (dict "title" "Devlogs on this site"
+            "where" "ctrlc03.github.io"
+            "when"  "2023 — present"
+            "body"  "Cairo security, learning Circom, QF/k-means research, p0tion scaling.")
+    ))
+  -}}
+
+  {{- $site := dict
+    "name"     "ctrlc03"
+    "brand"    "CTRLC03"
+    "tagline"  ""
+    "bio"      "Software engineer building production infrastructure for confidential coordination — voting systems, sealed-bid auctions, and collaborative computation on encrypted data. Background spans offensive security and cryptographic protocol development across ZK, FHE, and MPC."
+    "focus"    "FHE · MPC · ZK · security"
+    "location" "remote / Ethereum"
+    "contact"  (printf "github.com/%s" (.Site.Params.github | default "ctrlc03"))
+    "updated"  (now.Format "2006.01")
+    "links"    (slice
+      (slice "GITHUB"   (printf "https://github.com/%s" (.Site.Params.github | default "ctrlc03")))
+      (slice "TWITTER"  (printf "https://twitter.com/%s" (.Site.Params.twitter | default "ctrlc03")))
+      (slice "RSS"      "/index.xml"))
+  -}}
+
+  {{- $about := `<p>I'm a software engineer building production infrastructure for confidential coordination — voting systems, sealed-bid auctions, and collaborative computation on encrypted data. My background spans offensive security (penetration testing, Solidity audits) and cryptographic protocol development across ZK, FHE, and MPC.</p><p>I'm currently a Senior Engineer at Gnosis Guild, working on <a href="https://github.com/gnosisguild/enclave">The Interfold</a> (formerly Enclave) — implementing FHE / ZK / MPC primitives in Rust and wiring them across Noir circuits and Solidity contracts. Before that I spent three years at the Ethereum Foundation's PSE team — over a year leading MACI (with Semaphore and zk-kit added toward the end), and the rest as an engineer on MACI, p0tion, DefinitelySetup, Semaphore, zk-kit, and Excubiae.</p><p>This site is the long-running log of what I'm learning along the way — circuit design, security pitfalls, ceremony tooling — and small tools I ship when something keeps annoying me.</p>` -}}
+
+  <script>
+    window.PORTFOLIO_CONTENT = {
+      projects: {{ $projects | jsonify | safeJS }},
+      posts:    {{ $posts    | jsonify | safeJS }},
+      cv:       {{ $cv       | jsonify | safeJS }},
+      sidebar:  {{ $sidebar  | jsonify | safeJS }},
+      about:    {{ $about    | jsonify | safeJS }}
+    };
+    window.SITE_META = {{ $site | jsonify | safeJS }};
+    {{ block "initial-route" . }}window.INITIAL_ROUTE = { name: "home" };{{ end }}
+  </script>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+  <script type="text/babel" src="{{ "starters/tweaks-panel.jsx" | relURL }}" data-presets="react"></script>
+  <script type="text/babel" src="{{ "app.jsx" | relURL }}" data-presets="react"></script>
+</body>
+</html>

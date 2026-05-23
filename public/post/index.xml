@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on ctrlc03 tech adventures</title>
+    <link>http://localhost:1313/post/</link>
+    <description>Recent content in Posts on ctrlc03 tech adventures</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 01 Jun 2023 10:40:30 +0100</lastBuildDate>
+    <atom:link href="http://localhost:1313/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Devlog 00001</title>
+      <link>http://localhost:1313/post/devlog_01/</link>
+      <pubDate>Thu, 01 Jun 2023 10:40:30 +0100</pubDate>
+      <guid>http://localhost:1313/post/devlog_01/</guid>
+      <description>How to frontend</description>
+    </item>
+    <item>
+      <title>Devlog 00002</title>
+      <link>http://localhost:1313/post/devlog_02/</link>
+      <pubDate>Thu, 01 Jun 2023 10:40:30 +0100</pubDate>
+      <guid>http://localhost:1313/post/devlog_02/</guid>
+      <description>QF Research &amp;amp; scaling p0tion</description>
+    </item>
+    <item>
+      <title>Learning Circom</title>
+      <link>http://localhost:1313/post/learning-circom/</link>
+      <pubDate>Fri, 28 Apr 2023 10:40:30 +0100</pubDate>
+      <guid>http://localhost:1313/post/learning-circom/</guid>
+      <description>Learning Circom together</description>
+    </item>
+    <item>
+      <title>Cairo 0.x Security</title>
+      <link>http://localhost:1313/post/cairo-security/</link>
+      <pubDate>Fri, 28 Apr 2023 10:22:20 +0100</pubDate>
+      <guid>http://localhost:1313/post/cairo-security/</guid>
+      <description>StarkNet is a decentralized ZK rollup which operates as a Layer 2 (L2) for Ethereum. Let&amp;rsquo;s talk security</description>
+    </item>
+  </channel>
+</rss>
