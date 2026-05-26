@@ -56,7 +56,7 @@ function Nav({ route, setRoute, paletteLabel }) {
                onClick={() => setRoute({ name: id })}>{label}</div>
         ))}
       </div>
-      <div className="nav-meta"><span className="dot"></span>{paletteLabel} · {time} UTC</div>
+      <div className="nav-meta"><span className="dot"></span>{time} UTC</div>
     </nav>
   );
 }
@@ -66,8 +66,8 @@ function Hero() {
     <section className="hero">
       <div className="hero-grid">
         <div>
-          <div className="hero-label">PROFILE — 014.A / FHE · ZK · MPC</div>
-          <h1 className="hero-title">{SITE.name || "ctrlc03"}.<br/><span>{SITE.tagline}</span></h1>
+          <div className="hero-label">FHE · ZK · MPC</div>
+          <h1 className="hero-title">{SITE.name || "ctrlc03"}.{SITE.tagline && <><br/><span>{SITE.tagline}</span></>}</h1>
           <p className="hero-sub">{SITE.bio || "Engineer working on zero-knowledge, cryptography, and the seams between humans and the machines they steer."}</p>
           <div className="hero-meta">
             <span><b>Focus</b> · {SITE.focus || "ZK · cryptography · security"}</span>
@@ -75,9 +75,8 @@ function Hero() {
           </div>
         </div>
         <aside className="hero-side">
-          <div>STATUS<span className="v">// AVAILABLE</span></div>
+          <div>STATUS<span className="v">// AT GNOSIS GUILD</span></div>
           <div>STACK<span className="v">RUST · TS · SOLIDITY · NOIR</span></div>
-          <div>SIGNAL<span className="v">SCROLL FOR INTEL ↓</span></div>
         </aside>
       </div>
     </section>
@@ -141,7 +140,7 @@ function About() {
     <section className="page">
       <div className="sec-head">
         <span className="sec-num">/04</span>
-        <h2 className="sec-title">About / Now / Stack</h2>
+        <h2 className="sec-title">About / Now / Uses</h2>
         <span className="sec-meta">{SITE.updated || ""}</span>
       </div>
       <div className="about-grid">
@@ -226,10 +225,6 @@ function ProjectDetail({ slug, setRoute }) {
               </div>
             ))}
           </div>
-          <div style={{ color: "var(--cyan)", letterSpacing: "0.15em", fontSize: 10 }}>
-            ARTIFACT — {p.slug.toUpperCase()}.{p.year}<br/>
-            CLEARANCE — PUBLIC
-          </div>
         </aside>
       </div>
     </article>
@@ -276,7 +271,7 @@ function Footer() {
           <a key={label} href={href} target="_blank" rel="noopener">{label}</a>
         ))}
       </div>
-      <div>BUILD · NEON-NOIR</div>
+      <div></div>
     </footer>
   );
 }
