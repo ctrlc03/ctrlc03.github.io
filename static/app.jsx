@@ -27,6 +27,35 @@ const PALETTE_OPTIONS = [
 ];
 const PALETTE_KEYS = ["ice", "magenta-cyan", "acid", "amber", "violet", "crimson"];
 
+const ROUTE_TO_HASH = { home: "", projects: "work", posts: "notes", about: "about", resume: "cv" };
+const HASH_TO_ROUTE = { "": "home", work: "projects", notes: "posts", about: "about", cv: "resume" };
+
+function slugify(s) {
+  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function parseHash() {
+  const raw = (window.location.hash || "").replace(/^#/, "");
+  if (!raw) return null;
+  const [head, ...rest] = raw.split("/");
+  if (head === "project") return { name: "project", slug: rest.join("/") };
+  if (head === "post")    return { name: "post",    slug: rest.join("/") };
+  const name = HASH_TO_ROUTE[head];
+  if (!name) return null;
+  const r = { name };
+  if (rest.length) r.section = rest.join("/");
+  return r;
+}
+
+function routeToHash(route) {
+  if (route.name === "project") return `#project/${route.slug}`;
+  if (route.name === "post")    return `#post/${route.slug}`;
+  const h = ROUTE_TO_HASH[route.name];
+  if (h === undefined) return "";
+  const sec = route.section ? `/${route.section}` : "";
+  return h || sec ? `#${h}${sec}` : "";
+}
+
 function applyTweaks(t) {
   document.documentElement.setAttribute("data-theme", t.palette);
   document.documentElement.setAttribute("data-scanlines", t.scanlines ? "1" : "0");
@@ -173,7 +202,7 @@ function ResumePage() {
       <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 60, fontFamily: "var(--mono)", fontSize: 13, lineHeight: 1.7 }}>
         {C.cv.map(block => (
           <React.Fragment key={block.label}>
-            <div style={{ color: "var(--mag)", letterSpacing: "0.2em", textTransform: "uppercase", fontSize: 10 }}>{block.label}</div>
+            <div id={`cv-${slugify(block.label)}`} style={{ color: "var(--mag)", letterSpacing: "0.2em", textTransform: "uppercase", fontSize: 10, scrollMarginTop: 80 }}>{block.label}</div>
             <div style={{ color: "var(--fg-2)" }}>
               {block.entries.map((e, i) => (
                 <div key={i} style={{ marginBottom: 22, paddingBottom: 22, borderBottom: "1px solid var(--line)" }}>
@@ -277,10 +306,42 @@ function Footer() {
 }
 
 function App() {
-  const initial = window.INITIAL_ROUTE || { name: "home" };
-  const [route, setRoute] = useState(initial);
+  const initial = parseHash() || window.INITIAL_ROUTE || { name: "home" };
+  const [route, setRouteState] = useState(initial);
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   useEffect(() => { applyTweaks(t); }, [t]);
+
+  const setRoute = (r) => {
+    const hash = routeToHash(r);
+    const target = hash || window.location.pathname + window.location.search;
+    if ((window.location.hash || "") !== hash) {
+      window.history.pushState(null, "", target);
+    }
+    setRouteState(r);
+  };
+
+  useEffect(() => {
+    const onNav = () => { setRouteState(parseHash() || { name: "home" }); };
+    window.addEventListener("hashchange", onNav);
+    window.addEventListener("popstate", onNav);
+    return () => {
+      window.removeEventListener("hashchange", onNav);
+      window.removeEventListener("popstate", onNav);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (route.section) {
+      const id = `${ROUTE_TO_HASH[route.name] || route.name}-${route.section}`;
+      const tries = [0, 60, 180, 400];
+      tries.forEach(d => setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, d));
+    } else {
+      window.scrollTo({ top: 0 });
+    }
+  }, [route.name, route.slug, route.section]);
 
   const paletteIdx = (() => {
     if (typeof t.palette === "string") return PALETTE_KEYS.indexOf(t.palette);
