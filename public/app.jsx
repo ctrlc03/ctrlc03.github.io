@@ -27,8 +27,8 @@ const PALETTE_OPTIONS = [
 ];
 const PALETTE_KEYS = ["ice", "magenta-cyan", "acid", "amber", "violet", "crimson"];
 
-const ROUTE_TO_HASH = { home: "", projects: "work", posts: "notes", about: "about", resume: "cv" };
-const HASH_TO_ROUTE = { "": "home", work: "projects", notes: "posts", about: "about", cv: "resume" };
+const ROUTE_TO_HASH = { home: "", projects: "work", posts: "notes", talks: "talks", about: "about", resume: "cv" };
+const HASH_TO_ROUTE = { "": "home", work: "projects", notes: "posts", talks: "talks", about: "about", cv: "resume" };
 
 function slugify(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -68,6 +68,7 @@ function Nav({ route, setRoute, paletteLabel }) {
     ["home", "Index"],
     ["projects", "Work"],
     ["posts", "Notes"],
+    ["talks", "Talks"],
     ["about", "About"],
     ["resume", "CV"],
   ];
@@ -112,32 +113,64 @@ function Hero() {
   );
 }
 
-function ProjectsBlock({ setRoute, limit }) {
-  const items = limit ? C.projects.slice(0, limit) : C.projects;
+function ProjectGrid({ items, setRoute, offset = 0 }) {
   return (
-    <section className="page" style={{ paddingTop: 56 }}>
-      <div className="sec-head">
-        <span className="sec-num">/02</span>
-        <h2 className="sec-title">Selected Work</h2>
-        <span className="sec-meta">{items.length} entries</span>
-      </div>
-      <div className="proj-grid">
-        {items.map((p, i) => (
-          <div key={p.slug} className="proj" onClick={() => setRoute({ name: "project", slug: p.slug })}>
-            <div className="proj-top">
-              <span>P/{String(i + 1).padStart(3, "0")}</span>
-              <span>{p.year}</span>
-            </div>
-            <h3 className="proj-name">{p.title}</h3>
-            <p className="proj-tag">{p.tag}</p>
-            <div className="proj-bottom">
-              <div className="proj-tags">{p.tags.map(t => <span key={t}>{t}</span>)}</div>
-              <span>OPEN →</span>
-            </div>
+    <div className="proj-grid">
+      {items.map((p, i) => (
+        <div key={p.slug} className="proj" onClick={() => setRoute({ name: "project", slug: p.slug })}>
+          <div className="proj-top">
+            <span>P/{String(offset + i + 1).padStart(3, "0")}</span>
+            <span>{p.year}</span>
           </div>
-        ))}
-      </div>
-    </section>
+          <h3 className="proj-name">{p.title}</h3>
+          <p className="proj-tag">{p.tag}</p>
+          <div className="proj-bottom">
+            <div className="proj-tags">{p.tags.map(t => <span key={t}>{t}</span>)}</div>
+            <span>OPEN →</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProjectsBlock({ setRoute, limit }) {
+  const work = C.projects.filter(p => p.kind !== "personal");
+  const personal = C.projects.filter(p => p.kind === "personal");
+  if (limit) {
+    const items = work.slice(0, limit);
+    return (
+      <section className="page" style={{ paddingTop: 56 }}>
+        <div className="sec-head">
+          <span className="sec-num">/02</span>
+          <h2 className="sec-title">Selected Work</h2>
+          <span className="sec-meta">{items.length} of {C.projects.length} entries</span>
+        </div>
+        <ProjectGrid items={items} setRoute={setRoute} />
+      </section>
+    );
+  }
+  return (
+    <>
+      <section className="page" style={{ paddingTop: 56 }}>
+        <div className="sec-head">
+          <span className="sec-num">/02a</span>
+          <h2 className="sec-title">Selected Work</h2>
+          <span className="sec-meta">{work.length} entries</span>
+        </div>
+        <ProjectGrid items={work} setRoute={setRoute} />
+      </section>
+      {personal.length > 0 && (
+        <section className="page" style={{ paddingTop: 0 }}>
+          <div className="sec-head">
+            <span className="sec-num">/02b</span>
+            <h2 className="sec-title">Side Quests</h2>
+            <span className="sec-meta">{personal.length} entries</span>
+          </div>
+          <ProjectGrid items={personal} setRoute={setRoute} offset={work.length} />
+        </section>
+      )}
+    </>
   );
 }
 
@@ -168,7 +201,7 @@ function About() {
   return (
     <section className="page">
       <div className="sec-head">
-        <span className="sec-num">/04</span>
+        <span className="sec-num">/05</span>
         <h2 className="sec-title">About / Now / Uses</h2>
         <span className="sec-meta">{SITE.updated || ""}</span>
       </div>
@@ -191,34 +224,53 @@ function About() {
   );
 }
 
+function EntryBlocks({ blocks, idPrefix }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 60, fontFamily: "var(--mono)", fontSize: 13, lineHeight: 1.7 }}>
+      {blocks.map(block => (
+        <React.Fragment key={block.label}>
+          <div id={`${idPrefix}-${slugify(block.label)}`} style={{ color: "var(--mag)", letterSpacing: "0.2em", textTransform: "uppercase", fontSize: 10, scrollMarginTop: 80 }}>{block.label}</div>
+          <div style={{ color: "var(--fg-2)" }}>
+            {block.entries.map((e, i) => (
+              <div key={i} style={{ marginBottom: 22, paddingBottom: 22, borderBottom: "1px solid var(--line)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", color: "var(--fg)", fontSize: 14, fontWeight: 500 }}>
+                  <span>{e.title}</span><span style={{ color: "var(--fg-3)" }}>{e.when}</span>
+                </div>
+                {e.where && <div style={{ color: "var(--cyan)", fontSize: 12, marginTop: 4 }}>{e.where}</div>}
+                {e.body && (/^https?:\/\//.test(e.body)
+                  ? <div style={{ marginTop: 8 }}><a href={e.body} target="_blank" rel="noopener" style={{ color: "var(--mag)", fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", borderBottom: "1px solid rgba(var(--mag-rgb),0.4)" }}>→ {e.body.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a></div>
+                  : <div style={{ marginTop: 8, color: "var(--fg-2)" }}>{e.body}</div>)}
+              </div>
+            ))}
+          </div>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+function TalksPage() {
+  return (
+    <section className="page">
+      <div className="sec-head">
+        <span className="sec-num">/04</span>
+        <h2 className="sec-title">Talks & Writing</h2>
+        <span className="sec-meta">conferences · blog posts</span>
+      </div>
+      <EntryBlocks blocks={C.talks || []} idPrefix="talks" />
+    </section>
+  );
+}
+
 function ResumePage() {
   return (
     <section className="page">
       <div className="sec-head">
-        <span className="sec-num">/05</span>
+        <span className="sec-num">/06</span>
         <h2 className="sec-title">Curriculum Vitae</h2>
         <span className="sec-meta">printable</span>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 60, fontFamily: "var(--mono)", fontSize: 13, lineHeight: 1.7 }}>
-        {C.cv.map(block => (
-          <React.Fragment key={block.label}>
-            <div id={`cv-${slugify(block.label)}`} style={{ color: "var(--mag)", letterSpacing: "0.2em", textTransform: "uppercase", fontSize: 10, scrollMarginTop: 80 }}>{block.label}</div>
-            <div style={{ color: "var(--fg-2)" }}>
-              {block.entries.map((e, i) => (
-                <div key={i} style={{ marginBottom: 22, paddingBottom: 22, borderBottom: "1px solid var(--line)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", color: "var(--fg)", fontSize: 14, fontWeight: 500 }}>
-                    <span>{e.title}</span><span style={{ color: "var(--fg-3)" }}>{e.when}</span>
-                  </div>
-                  {e.where && <div style={{ color: "var(--cyan)", fontSize: 12, marginTop: 4 }}>{e.where}</div>}
-                  {e.body && (/^https?:\/\//.test(e.body)
-                    ? <div style={{ marginTop: 8 }}><a href={e.body} target="_blank" rel="noopener" style={{ color: "var(--mag)", fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", borderBottom: "1px solid rgba(var(--mag-rgb),0.4)" }}>→ {e.body.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a></div>
-                    : <div style={{ marginTop: 8, color: "var(--fg-2)" }}>{e.body}</div>)}
-                </div>
-              ))}
-            </div>
-          </React.Fragment>
-        ))}
-      </div>
+      <EntryBlocks blocks={C.cv} idPrefix="cv" />
     </section>
   );
 }
@@ -247,7 +299,7 @@ function ProjectDetail({ slug, setRoute }) {
         <aside style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--fg-3)", borderLeft: "1px solid var(--line)", paddingLeft: 24 }}>
           <div style={{ marginBottom: 24 }}>
             <div style={{ color: "var(--mag)", letterSpacing: "0.2em", fontSize: 10, marginBottom: 10 }}>RELATED</div>
-            {C.projects.filter(x => x.slug !== p.slug).slice(0, 3).map(r => (
+            {C.projects.filter(x => x.slug !== p.slug && (x.kind === "personal") === (p.kind === "personal")).slice(0, 3).map(r => (
               <div key={r.slug} onClick={() => setRoute({ name: "project", slug: r.slug })}
                    style={{ padding: "10px 0", borderBottom: "1px dashed var(--line)", cursor: "pointer", color: "var(--fg-2)" }}>
                 → {r.title}
@@ -363,6 +415,7 @@ function App() {
       {route.name === "project" && <ProjectDetail slug={route.slug} setRoute={setRoute} />}
       {route.name === "posts" && <PostsBlock setRoute={setRoute} />}
       {route.name === "post" && <PostDetail slug={route.slug} setRoute={setRoute} />}
+      {route.name === "talks" && <TalksPage />}
       {route.name === "about" && <About />}
       {route.name === "resume" && <ResumePage />}
       <Footer />

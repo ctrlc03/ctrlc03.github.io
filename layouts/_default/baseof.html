@@ -39,15 +39,21 @@
     (dict "slug" "excubiae"      "title" "EXCUBIAE"      "tag" "Modular framework for on-chain gatekeepers." "year" "2024" "role" "Contributor" "status" "Open source" "tags" (slice "SOLIDITY" "TS") "body" "Composable gatekeeper primitives for permissioned on-chain coordination — used to gate access to MACI polls and similar systems." "link" "https://github.com/privacy-scaling-explorations/excubiae")
     (dict "slug" "zk-kit"        "title" "ZK-KIT"        "tag" "Reusable libraries for zero-knowledge applications." "year" "2025" "role" "Team Lead" "status" "Open source" "tags" (slice "TS" "CIRCOM" "NOIR") "body" "A monorepo of utilities used across PSE's ZK stack — Merkle trees, identity, proof helpers. Led release coordination and direction in 2025." "link" "https://github.com/privacy-scaling-explorations/zk-kit")
     (dict "slug" "qfi-kmeans"    "title" "QFI-KMEANS"    "tag" "Anti-collusion research for quadratic funding via k-means clustering." "year" "2023" "role" "Author" "status" "Research" "tags" (slice "PYTHON" "RESEARCH") "body" "Exploring k-means as a more SNARK-friendly collusion detector for QF rounds — alternative to pairwise matching for use inside ZK circuits." "link" "https://github.com/ctrlc03/qfi-kmeans")
+    (dict "slug" "language-learning-app" "kind" "personal" "title" "LANGUAGE LEARNING APP" "tag" "An app to learn Chinese and Japanese." "year" "2026" "role" "Author" "status" "Live" "tags" (slice "TS") "body" "Built to scratch my own itch while studying Chinese and Japanese — a study companion I actually use, deployed on Vercel." "link" "https://github.com/ctrlc03/language-learning-app")
+    (dict "slug" "the-konqueror-rust" "kind" "personal" "title" "THE KONQUEROR (RUST)" "tag" "Command and Control (C2) framework for red teams, written in Rust." "year" "2026" "role" "Author" "status" "In development" "tags" (slice "RUST" "SECURITY") "body" "A ground-up Rust rewrite of The Konqueror, my university final project — a C2 framework for authorized red-team engagements. An excuse to revisit offensive tooling with the language I now spend most of my time in." "link" "https://github.com/ctrlc03/the-konqueror-rust")
+    (dict "slug" "minimalqf" "kind" "personal" "title" "MINIMALQF" "tag" "A minimal quadratic funding implementation." "year" "2024" "role" "Author" "status" "Open source" "tags" (slice "SOLIDITY") "body" "A stripped-down quadratic funding implementation in Solidity — a companion piece to my QF anti-collusion research and MACI work, exploring how small a credible QF round can be." "link" "https://github.com/ctrlc03/minimalQF")
+    (dict "slug" "stark-browniesh" "kind" "personal" "title" "STARK-BROWNIESH" "tag" "Interactive CLI wrapper for nile and starknet-devnet to audit StarkNet contracts." "year" "2022" "role" "Author" "status" "Open source" "tags" (slice "PYTHON" "STARKNET") "body" "A brownie-style interactive shell for poking at Cairo contracts, built while expanding Halborn's audit practice into StarkNet." "link" "https://github.com/ctrlc03/stark-browniesh")
+    (dict "slug" "erc721r-cairo" "kind" "personal" "title" "ERC721R-CAIRO" "tag" "Cairo implementation of ERC721R — refundable NFTs on StarkNet." "year" "2022" "role" "Author" "status" "Open source" "tags" (slice "CAIRO") "body" "A port of the ERC721R refundable-NFT standard to Cairo, written while exploring the StarkNet ecosystem during my Cairo auditing days." "link" "https://github.com/ctrlc03/ERC721R-Cairo")
+    (dict "slug" "the-konqueror" "kind" "personal" "title" "THE KONQUEROR" "tag" "Command and Control (C2) framework written in Go — university final project." "year" "2020" "role" "Author" "status" "Archived" "tags" (slice "GO" "SECURITY") "body" "My university final project: a C2 framework for red-team operations written in Go. Now being reborn in Rust as The Konqueror (Rust)." "link" "https://github.com/ctrlc03/the-konqueror")
   -}}
 
   {{- $sidebar := slice
     (dict "label" "Now"     "items" (slice
       (slice "Building"   "The Interfold · Gnosis Guild")
       (slice "Focus"      "FHE · MPC · ZK")
-      (slice "Side-quest" "this site, again")))
+      (slice "Side-quest" "Rust projects")))
     (dict "label" "Uses"    "items" (slice
-      (slice "Editor"     "VSCode")
+      (slice "Editor"     "Zed")
       (slice "Languages"  "Rust · TS · Solidity · Noir")
       (slice "Shell"      "zsh")
       (slice "OS"         "macOS")))
@@ -81,7 +87,14 @@
             "when"  "Sep 2018 — Jul 2020"
             "body"  "First Class Honours. Awarded CIISec Student Project of the Year.")
     ))
+  -}}
+
+  {{- $talks := slice
     (dict "label" "Talks" "entries" (slice
+      (dict "title" "Building with FHE — Practical examples + lessons learned"
+            "where" "Devconnect Argentina · FHE Gathering"
+            "when"  "Nov 2025"
+            "body"  "https://www.youtube.com/live/C-kF0gplCto?t=5222")
       (dict "title" "MACI — Why do we need private voting and what are we up to"
             "where" "Devcon 7 SEA · Applied Cryptography track"
             "when"  "Nov 2024"
@@ -164,6 +177,7 @@
       projects: {{ $projects | jsonify | safeJS }},
       posts:    {{ $posts    | jsonify | safeJS }},
       cv:       {{ $cv       | jsonify | safeJS }},
+      talks:    {{ $talks    | jsonify | safeJS }},
       sidebar:  {{ $sidebar  | jsonify | safeJS }},
       about:    {{ $about    | jsonify | safeJS }}
     };
