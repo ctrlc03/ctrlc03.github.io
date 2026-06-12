@@ -120,7 +120,7 @@ function ProjectGrid({ items, setRoute, offset = 0 }) {
         <div key={p.slug} className="proj" onClick={() => setRoute({ name: "project", slug: p.slug })}>
           <div className="proj-top">
             <span>P/{String(offset + i + 1).padStart(3, "0")}</span>
-            <span>{p.year}</span>
+            <span>{p.category ? `${p.category} · ${p.year}` : p.year}</span>
           </div>
           <h3 className="proj-name">{p.title}</h3>
           <p className="proj-tag">{p.tag}</p>
@@ -134,9 +134,27 @@ function ProjectGrid({ items, setRoute, offset = 0 }) {
   );
 }
 
+function CategoryFilter({ items, active, onChange }) {
+  const cats = ["ALL", ...Array.from(new Set(items.map(p => p.category).filter(Boolean)))];
+  if (cats.length <= 2) return null;
+  return (
+    <div className="cat-filter">
+      {cats.map(c => (
+        <span key={c}
+              className={"cat-chip" + (active === c ? " active" : "")}
+              onClick={() => onChange(c)}>{c}</span>
+      ))}
+    </div>
+  );
+}
+
 function ProjectsBlock({ setRoute, limit }) {
   const work = C.projects.filter(p => p.kind !== "personal");
   const personal = C.projects.filter(p => p.kind === "personal");
+  const [workCat, setWorkCat] = useState("ALL");
+  const [personalCat, setPersonalCat] = useState("ALL");
+  const workItems = workCat === "ALL" ? work : work.filter(p => p.category === workCat);
+  const personalItems = personalCat === "ALL" ? personal : personal.filter(p => p.category === personalCat);
   if (limit) {
     const items = work.slice(0, limit);
     return (
@@ -156,18 +174,20 @@ function ProjectsBlock({ setRoute, limit }) {
         <div className="sec-head">
           <span className="sec-num">/02a</span>
           <h2 className="sec-title">Selected Work</h2>
-          <span className="sec-meta">{work.length} entries</span>
+          <span className="sec-meta">{workItems.length} of {work.length} entries</span>
         </div>
-        <ProjectGrid items={work} setRoute={setRoute} />
+        <CategoryFilter items={work} active={workCat} onChange={setWorkCat} />
+        <ProjectGrid items={workItems} setRoute={setRoute} />
       </section>
       {personal.length > 0 && (
         <section className="page" style={{ paddingTop: 0 }}>
           <div className="sec-head">
             <span className="sec-num">/02b</span>
             <h2 className="sec-title">Side Quests</h2>
-            <span className="sec-meta">{personal.length} entries</span>
+            <span className="sec-meta">{personalItems.length} of {personal.length} entries</span>
           </div>
-          <ProjectGrid items={personal} setRoute={setRoute} offset={work.length} />
+          <CategoryFilter items={personal} active={personalCat} onChange={setPersonalCat} />
+          <ProjectGrid items={personalItems} setRoute={setRoute} offset={work.length} />
         </section>
       )}
     </>
@@ -285,6 +305,7 @@ function ProjectDetail({ slug, setRoute }) {
         <p className="detail-tag">{p.tag}</p>
         <div className="detail-meta">
           <div><b>YEAR</b><span>{p.year}</span></div>
+          <div><b>CATEGORY</b><span>{p.category || "—"}</span></div>
           <div><b>ROLE</b><span>{p.role || "—"}</span></div>
           <div><b>STACK</b><span>{p.tags.join(" · ")}</span></div>
           <div><b>STATUS</b><span>{p.status || "—"}</span></div>
@@ -299,7 +320,8 @@ function ProjectDetail({ slug, setRoute }) {
         <aside style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--fg-3)", borderLeft: "1px solid var(--line)", paddingLeft: 24 }}>
           <div style={{ marginBottom: 24 }}>
             <div style={{ color: "var(--mag)", letterSpacing: "0.2em", fontSize: 10, marginBottom: 10 }}>RELATED</div>
-            {C.projects.filter(x => x.slug !== p.slug && (x.kind === "personal") === (p.kind === "personal")).slice(0, 3).map(r => (
+            {C.projects.filter(x => x.slug !== p.slug && (x.kind === "personal") === (p.kind === "personal"))
+              .sort((a, b) => (b.category === p.category) - (a.category === p.category)).slice(0, 3).map(r => (
               <div key={r.slug} onClick={() => setRoute({ name: "project", slug: r.slug })}
                    style={{ padding: "10px 0", borderBottom: "1px dashed var(--line)", cursor: "pointer", color: "var(--fg-2)" }}>
                 → {r.title}

@@ -107,6 +107,15 @@ button { font-family: inherit; }
 .sec-title { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; margin: 0; }
 .sec-meta { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--fg-3); letter-spacing: 0.15em; }
 
+.cat-filter { display: flex; flex-wrap: wrap; gap: 10px; margin: -16px 0 28px; }
+.cat-chip {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; color: var(--fg-3);
+  border: 1px solid var(--line); padding: 6px 14px; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.cat-chip:hover { color: var(--fg); border-color: var(--fg-3); }
+.cat-chip.active { color: var(--mag); border-color: rgba(var(--mag-rgb), 0.5); background: rgba(var(--mag-rgb), 0.06); }
+
 .proj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 1px solid var(--line); }
 .proj {
   border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
